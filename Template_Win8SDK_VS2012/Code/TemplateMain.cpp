@@ -51,6 +51,10 @@ ComputeShader*			g_ComputeShader			= NULL;
 
 D3D11Timer*				g_Timer					= NULL;
 
+///////////////////////////////////////////////////New variables//////////////////////////
+ID3D11Buffer*			m_constantBuffer = NULL;
+///////////////////////////////////////////////////New variables//////////////////////////
+
 int g_Width, g_Height;
 
 //--------------------------------------------------------------------------------------
@@ -174,6 +178,14 @@ HRESULT Init()
 
 HRESULT Update(float deltaTime)
 {
+	float numbers[3];
+	numbers[0] = 0;
+	numbers[1] = 0;
+	numbers[2] = 1;
+	m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(numbers), &numbers, nullptr);
+
+
+
 	return S_OK;
 }
 
@@ -181,6 +193,7 @@ HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
+	g_DeviceContext->CSSetConstantBuffers(0, 1, &m_constantBuffer);
 
 	g_ComputeShader->Set();
 	g_Timer->Start();
