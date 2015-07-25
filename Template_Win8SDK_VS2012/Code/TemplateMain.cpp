@@ -57,6 +57,7 @@ D3D11Timer*				g_Timer					= NULL;
 ID3D11Buffer*			m_constantBuffer = NULL;
 
 InputClass*				m_input = nullptr;
+float numbers[3];
 ///////////////////////////////////////////////////New variables//////////////////////////
 
 int g_Width, g_Height;
@@ -178,19 +179,48 @@ HRESULT Init()
 	g_Timer = new D3D11Timer(g_Device, g_DeviceContext);
 
 
+	numbers[0] = 0;
+	numbers[1] = 0;
+	numbers[2] = 1;
 	m_input = new InputClass;
 	m_input->Initialize();
 
+	m_input->RegisterKey(VkKeyScan('q'));
+	m_input->RegisterKey(VkKeyScan('w'));
+	m_input->RegisterKey(VkKeyScan('e'));
+	m_input->RegisterKey(VkKeyScan('a'));
+	m_input->RegisterKey(VkKeyScan('s'));
+	m_input->RegisterKey(VkKeyScan('d'));
 	return S_OK;
 }
 
 HRESULT Update(float deltaTime)
 {
-	
-	float numbers[3];
-	numbers[0] = 0;
-	numbers[1] = 0;
-	numbers[2] = 1;
+	if (m_input->IsKeyPressed(VkKeyScan('q')))
+	{
+		numbers[0] += deltaTime;
+	}
+	if (m_input->IsKeyPressed(VkKeyScan('a')))
+	{
+		numbers[0] -= deltaTime;
+	}
+	if (m_input->IsKeyPressed(VkKeyScan('w')))
+	{
+		numbers[1] += deltaTime;
+	}
+	if (m_input->IsKeyPressed(VkKeyScan('s')))
+	{
+		numbers[1] -= deltaTime;
+	}
+	if (m_input->IsKeyPressed(VkKeyScan('e')))
+	{
+		numbers[2] += deltaTime;
+	}
+	if (m_input->IsKeyPressed(VkKeyScan('d')))
+	{
+		numbers[3] -= deltaTime;
+	}
+
 	m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(numbers), &numbers, nullptr);
 
 
@@ -268,8 +298,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 			Render(dt);
 
 			//Clear input
-
-			//Clear input
+			m_input->ClearInput();
 
 			prevTimeStamp = currTimeStamp;
 		}

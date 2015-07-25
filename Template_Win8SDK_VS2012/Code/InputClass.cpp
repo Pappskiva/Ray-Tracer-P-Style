@@ -147,6 +147,29 @@ bool InputClass::IsRightMouseClicked() const
 	return m_rightMouseButton->IsClicked();
 }
 
+void InputClass::ClearInput()
+{
+	if (m_leftMouseButton->IsClicked())
+	{
+		m_leftMouseButton->SetState(BE_NONE);
+	}
+
+	if (m_rightMouseButton->IsClicked())
+	{
+		m_rightMouseButton->SetState(BE_NONE);
+	}
+
+	for (unsigned int i = 0; i < m_keyBoardEvents.size(); i++)
+	{
+		if (m_keyBoardEvents[i]->IsClicked())
+		{
+			m_keyBoardEvents[i]->SetState(BE_NONE);
+		}
+	}
+	m_lastCharRead = '\0';
+}
+
+
 bool KeyBoardButtonEvent::Initialize(int p_key)
 {
 	m_key = p_key;

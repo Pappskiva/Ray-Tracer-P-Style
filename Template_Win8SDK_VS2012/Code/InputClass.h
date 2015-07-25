@@ -50,9 +50,13 @@ public:
 	bool IsRightMousePressed() const;
 	bool IsRightMouseClicked() const;
 
+	void ClearInput();
+
 private:
 	std::vector<KeyBoardButtonEvent*> m_keyBoardEvents;
 
 	ButtonEvent *m_leftMouseButton;
 	ButtonEvent *m_rightMouseButton;
+
+	char m_lastCharRead;
 };

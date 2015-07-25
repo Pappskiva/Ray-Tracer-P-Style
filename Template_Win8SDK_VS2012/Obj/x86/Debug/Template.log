@@ -1,12 +1,17 @@
-﻿Build started 2015-07-25 10:39:42.
+﻿Build started 2015-07-25 12:52:56.
      1>Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\Common /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/" /Fd"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/vc120.pdb" /Gd /TP /analyze- /errorReport:prompt TemplateMain.cpp
          TemplateMain.cpp
-     1>c:\users\alexander\documents\github\ray-tracer-p-style\template_win8sdk_vs2012\code\templatemain.cpp : fatal error C1041: cannot open program database 'c:\users\alexander\documents\github\ray-tracer-p-style\template_win8sdk_vs2012\obj\x86\debug\vc120.idb'; if multiple CL.EXE write to the same .PDB file, please use /FS
-     1>cl : Command line warning D9028: minimal rebuild failure, reverting to normal build
-     1>Done Building Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" (Build target(s)) -- FAILED.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.lib" /MACHINE:X86 /SAFESEH "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/ComputeHelp.obj"
+         "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/D3D11Timer.obj"
+         "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/InputClass.obj"
+         "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/ObjClass.obj"
+         "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/TemplateMain.obj"
+         Template.vcxproj -> C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.exe
+     1>Done Building Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" (Build target(s)).
 
-Build FAILED.
+Build succeeded.
 
-Time Elapsed 00:00:00.10
+Time Elapsed 00:00:01.13
