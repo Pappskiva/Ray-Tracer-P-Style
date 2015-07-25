@@ -34,6 +34,8 @@
 #pragma comment(lib, "DirectXTex.lib")
 #endif
 
+#include "InputClass.h"
+
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
@@ -53,6 +55,8 @@ D3D11Timer*				g_Timer					= NULL;
 
 ///////////////////////////////////////////////////New variables//////////////////////////
 ID3D11Buffer*			m_constantBuffer = NULL;
+
+InputClass*				m_input = nullptr;
 ///////////////////////////////////////////////////New variables//////////////////////////
 
 int g_Width, g_Height;
@@ -64,6 +68,7 @@ HRESULT             InitWindow( HINSTANCE hInstance, int nCmdShow );
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
+void				Shutdown();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -173,17 +178,20 @@ HRESULT Init()
 	g_Timer = new D3D11Timer(g_Device, g_DeviceContext);
 
 
+	m_input = new InputClass;
+	m_input->Initialize();
+
 	return S_OK;
 }
 
 HRESULT Update(float deltaTime)
 {
+	
 	float numbers[3];
 	numbers[0] = 0;
 	numbers[1] = 0;
 	numbers[2] = 1;
 	m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(numbers), &numbers, nullptr);
-
 
 
 	return S_OK;
@@ -193,7 +201,10 @@ HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
+
 	g_DeviceContext->CSSetConstantBuffers(0, 1, &m_constantBuffer);
+
+
 
 	g_ComputeShader->Set();
 	g_Timer->Start();
@@ -242,6 +253,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 	{
 		if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE) )
 		{
+			m_input->Update(msg.message, msg.wParam, msg.lParam);
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}
@@ -254,6 +266,10 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 			//render
 			Update(dt);
 			Render(dt);
+
+			//Clear input
+
+			//Clear input
 
 			prevTimeStamp = currTimeStamp;
 		}
@@ -336,6 +352,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 		switch(wParam)
 		{
 			case VK_ESCAPE:
+				Shutdown();
 				PostQuitMessage(0);
 				break;
 		}
@@ -346,4 +363,10 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 	}
 
 	return 0;
+}
+void Shutdown()
+{
+	m_input->Shutdown();
+	delete m_input;
+	m_input = nullptr;
 }
