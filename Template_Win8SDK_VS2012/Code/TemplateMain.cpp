@@ -27,7 +27,7 @@
 	}
 */
 #include <DirectXTex.h>
-
+#include <DirectXMath.h>
 #if defined( DEBUG ) || defined( _DEBUG )
 #pragma comment(lib, "DirectXTexD.lib")
 #else
@@ -55,9 +55,12 @@ D3D11Timer*				g_Timer					= NULL;
 
 ///////////////////////////////////////////////////New variables//////////////////////////
 ID3D11Buffer*			m_constantBuffer = NULL;
-
 InputClass*				m_input = nullptr;
 float numbers[3];
+DirectX::XMFLOAT3 m_cameraPosition = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+DirectX::XMFLOAT3 m_upVector = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+DirectX::XMFLOAT3 m_cameraDirection = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+
 ///////////////////////////////////////////////////New variables//////////////////////////
 
 int g_Width, g_Height;
@@ -70,6 +73,7 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
 void				Shutdown();
+void				Initialize();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -178,7 +182,11 @@ HRESULT Init()
 	g_ComputeShader = g_ComputeSys->CreateComputeShader(_T("../Shaders/BasicCompute.fx"), NULL, "main", NULL);
 	g_Timer = new D3D11Timer(g_Device, g_DeviceContext);
 
-
+	Initialize();
+	return S_OK;
+}
+void Initialize()
+{
 	numbers[0] = 0;
 	numbers[1] = 0;
 	numbers[2] = 1;
@@ -191,42 +199,23 @@ HRESULT Init()
 	m_input->RegisterKey(VkKeyScan('a'));
 	m_input->RegisterKey(VkKeyScan('s'));
 	m_input->RegisterKey(VkKeyScan('d'));
-	return S_OK;
-}
 
+}
 HRESULT Update(float deltaTime)
 {
-	if (m_input->IsKeyPressed(VkKeyScan('q')))
-	{
-		numbers[0] += deltaTime;
-	}
-	if (m_input->IsKeyPressed(VkKeyScan('a')))
-	{
-		numbers[0] -= deltaTime;
-	}
-	if (m_input->IsKeyPressed(VkKeyScan('w')))
-	{
-		numbers[1] += deltaTime;
-	}
-	if (m_input->IsKeyPressed(VkKeyScan('s')))
-	{
-		numbers[1] -= deltaTime;
-	}
-	if (m_input->IsKeyPressed(VkKeyScan('e')))
-	{
-		numbers[2] += deltaTime;
-	}
-	if (m_input->IsKeyPressed(VkKeyScan('d')))
-	{
-		numbers[3] -= deltaTime;
-	}
+	if (m_input->IsKeyPressed(VkKeyScan('q'))){	numbers[0] += deltaTime;}
+	if (m_input->IsKeyPressed(VkKeyScan('a'))){	numbers[0] -= deltaTime;}
+	if (m_input->IsKeyPressed(VkKeyScan('w'))){	numbers[1] += deltaTime;}
+	if (m_input->IsKeyPressed(VkKeyScan('s'))){	numbers[1] -= deltaTime;}
+	if (m_input->IsKeyPressed(VkKeyScan('e'))){	numbers[2] += deltaTime;}
+	if (m_input->IsKeyPressed(VkKeyScan('d'))){	numbers[3] -= deltaTime;}
+
+
 
 	m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(numbers), &numbers, nullptr);
 
-
 	return S_OK;
 }
-
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
@@ -256,6 +245,12 @@ HRESULT Render(float deltaTime)
 	SetWindowTextA(g_hWnd, title);
 
 	return S_OK;
+}
+void Shutdown()
+{
+	m_input->Shutdown();
+	delete m_input;
+	m_input = nullptr;
 }
 
 //--------------------------------------------------------------------------------------
@@ -392,10 +387,4 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 	}
 
 	return 0;
-}
-void Shutdown()
-{
-	m_input->Shutdown();
-	delete m_input;
-	m_input = nullptr;
 }
