@@ -1,4 +1,4 @@
-﻿Build started 2015-08-05 22:09:33.
+﻿Build started 2015-08-05 22:13:38.
      1>Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\Common /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/" /Fd"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Object.cpp
@@ -17,4 +17,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.79
+Time Elapsed 00:00:00.80
