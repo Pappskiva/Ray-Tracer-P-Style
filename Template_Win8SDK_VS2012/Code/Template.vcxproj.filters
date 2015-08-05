@@ -28,6 +28,9 @@
     <ClCompile Include="InputClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ObjClass.h">
@@ -45,6 +48,7 @@
     <ClInclude Include="InputClass.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <FXC Include="..\Bin\Shaders\BasicCompute.fx">

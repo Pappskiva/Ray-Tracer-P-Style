@@ -24,6 +24,7 @@ protected:
 	BE_State m_state;
 };
 
+
 class KeyBoardButtonEvent : public ButtonEvent
 {
 public:
@@ -36,6 +37,10 @@ private:
 class InputClass
 {
 public:
+
+	InputClass(const InputClass&) = delete;
+	InputClass& operator=(const InputClass&) = delete;
+	static InputClass* GetInstance();
 	void Initialize();
 	void Update(UINT p_message, WPARAM p_wParam, LPARAM p_lParam);
 	void Shutdown();
@@ -53,10 +58,14 @@ public:
 	void ClearInput();
 
 private:
+	InputClass();
+	~InputClass();
 	std::vector<KeyBoardButtonEvent*> m_keyBoardEvents;
 
 	ButtonEvent *m_leftMouseButton;
 	ButtonEvent *m_rightMouseButton;
 
 	char m_lastCharRead;
+
+	static InputClass* m_instance;
 };

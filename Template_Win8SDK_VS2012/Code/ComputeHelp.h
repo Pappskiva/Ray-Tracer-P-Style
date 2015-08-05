@@ -29,16 +29,11 @@ enum COMPUTE_BUFFER_TYPE
 class ComputeBuffer
 {
 public:
-	ID3D11Buffer*				GetResource()
-	{ return _Resource; }
-	ID3D11ShaderResourceView*	GetResourceView()
-	{ return _ResourceView; }
-	ID3D11UnorderedAccessView*	GetUnorderedAccessView()
-	{ return _UnorderedAccessView; }
-	ID3D11Buffer*				GetStaging()
-	{ return _Staging; }
-	void CopyToStaging()
-	{ _D3DContext->CopyResource(_Staging, _Resource); }
+	ID3D11Buffer*				GetResource()				{ return _Resource; }
+	ID3D11ShaderResourceView*	GetResourceView()			{ return _ResourceView; }
+	ID3D11UnorderedAccessView*	GetUnorderedAccessView()	{ return _UnorderedAccessView; }
+	ID3D11Buffer*				GetStaging()				{ return _Staging; }
+	void						CopyToStaging()				{ _D3DContext->CopyResource(_Staging, _Resource); }
 
 	template<class T>
 	T* Map()
@@ -51,8 +46,7 @@ public:
 		return p;
 	}
 
-	void Unmap()
-	{ 	_D3DContext->Unmap( _Staging, 0 ); }
+	void						 Unmap()					{ 	_D3DContext->Unmap( _Staging, 0 ); }
 
 	explicit ComputeBuffer()
 	{
@@ -62,8 +56,7 @@ public:
 		_Staging = nullptr;	
 	}
 
-	~ComputeBuffer()
-	{ Release(); }
+	~ComputeBuffer()	{ Release(); }
 	void Release()
 	{
 		SAFE_RELEASE(_Resource);
@@ -87,16 +80,11 @@ private:
 class ComputeTexture
 {
 public:
-	ID3D11Texture2D*			GetResource()
-	{ return _Resource; }
-	ID3D11ShaderResourceView*	GetResourceView()
-	{ return _ResourceView; }
-	ID3D11UnorderedAccessView*	GetUnorderedAccessView()
-	{ return _UnorderedAccessView; }
-	ID3D11Texture2D*			GetStaging()
-	{ return _Staging; }
-	void CopyToStaging()
-	{ _D3DContext->CopyResource(_Staging, _Resource); }
+	ID3D11Texture2D*			GetResource()				{ return _Resource; }
+	ID3D11ShaderResourceView*	GetResourceView()			{ return _ResourceView; }
+	ID3D11UnorderedAccessView*	GetUnorderedAccessView()	{ return _UnorderedAccessView; }
+	ID3D11Texture2D*			GetStaging()				{ return _Staging; }
+	void						CopyToStaging()				{ _D3DContext->CopyResource(_Staging, _Resource); }
 
 	template<class T>
 	T* Map()
@@ -109,8 +97,7 @@ public:
 		return p;
 	}
 
-	void Unmap()
-	{ 	_D3DContext->Unmap( _Staging, 0 ); }
+	void Unmap()	{ 	_D3DContext->Unmap( _Staging, 0 ); }
 
 	explicit ComputeTexture()
 	{
@@ -120,8 +107,7 @@ public:
 		_Staging = nullptr;	
 	}
 
-	~ComputeTexture()
-	{ Release(); }
+	~ComputeTexture()	{ Release(); }
 	void Release()
 	{
 		SAFE_RELEASE(_Resource);

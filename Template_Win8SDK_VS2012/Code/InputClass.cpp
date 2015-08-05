@@ -1,6 +1,20 @@
 #include "InputClass.h"
 #include <Windows.h>
 
+
+InputClass* InputClass::m_instance;
+
+InputClass::InputClass(){}
+InputClass::~InputClass(){}
+InputClass* InputClass::GetInstance()
+{
+	if (m_instance == nullptr)
+	{
+		m_instance = new InputClass();
+		m_instance->Initialize();
+	}
+	return m_instance;
+}
 void InputClass::Initialize()
 {
 	m_rightMouseButton = new ButtonEvent();
@@ -87,6 +101,8 @@ void InputClass::Shutdown()
 	delete m_leftMouseButton;
 	m_rightMouseButton = nullptr;
 	m_leftMouseButton = nullptr;
+
+
 }
 
 void InputClass::RegisterKey(int p_vkey)

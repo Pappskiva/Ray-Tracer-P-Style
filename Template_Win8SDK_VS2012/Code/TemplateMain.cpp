@@ -9,6 +9,7 @@
 
 #include "ComputeHelp.h"
 #include "D3D11Timer.h"
+#include <vector>
 
 /*	DirectXTex library - for usage info, see http://directxtex.codeplex.com/
 	
@@ -35,6 +36,7 @@
 #endif
 
 #include "InputClass.h"
+#include "Camera.h"
 
 //--------------------------------------------------------------------------------------
 // Global Variables
@@ -54,13 +56,27 @@ ComputeShader*			g_ComputeShader			= NULL;
 D3D11Timer*				g_Timer					= NULL;
 
 ///////////////////////////////////////////////////New variables//////////////////////////
-ID3D11Buffer*			m_constantBuffer = NULL;
-InputClass*				m_input = nullptr;
-float numbers[3];
-DirectX::XMFLOAT3 m_cameraPosition = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-DirectX::XMFLOAT3 m_upVector = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-DirectX::XMFLOAT3 m_cameraDirection = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+ID3D11Buffer*			m_everyFrameBuffer = nullptr;
+ID3D11Buffer*			m_dispatchBuffer = nullptr;
 
+//DirectX::XMFLOAT3 m_cameraPosition = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+//DirectX::XMFLOAT3 m_upVector = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+//DirectX::XMFLOAT3 m_cameraDirection = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+struct DispatchBufferStruct
+{
+	float screenWidth;
+	float screenHeight;
+	int x_dispatchCound;
+	int y_dispatchCound;
+};
+struct EveryFrameStruct
+{
+	DirectX::XMFLOAT3 cameraPosition;
+	DirectX::XMFLOAT4X4 inverseProjection;
+	DirectX::XMFLOAT4X4 inverseView;
+};
+//ConstantBuffer m_cBuffer;
 ///////////////////////////////////////////////////New variables//////////////////////////
 
 int g_Width, g_Height;
@@ -74,6 +90,7 @@ HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
 void				Shutdown();
 void				Initialize();
+void				UpdateDispatchBuffer(int p_x, int p_y);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -187,49 +204,99 @@ HRESULT Init()
 }
 void Initialize()
 {
-	numbers[0] = 0;
-	numbers[1] = 0;
-	numbers[2] = 1;
-	m_input = new InputClass;
-	m_input->Initialize();
+	Camera::GetInstance()->Initialize();
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('q'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('w'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('e'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('a'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('s'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('d'));
 
-	m_input->RegisterKey(VkKeyScan('q'));
-	m_input->RegisterKey(VkKeyScan('w'));
-	m_input->RegisterKey(VkKeyScan('e'));
-	m_input->RegisterKey(VkKeyScan('a'));
-	m_input->RegisterKey(VkKeyScan('s'));
-	m_input->RegisterKey(VkKeyScan('d'));
+	//DispatchBufferStruct cBuffer;
+	//cBuffer.screenHeight = 0;
+	//cBuffer.screenWidth = 0;
+	//cBuffer.x_dispatchCound = 0;
+	//cBuffer.y_dispatchCound = 0;
+	//m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(cBuffer), &cBuffer, nullptr);
+
+	HRESULT hr = S_OK;
+
+	int ByteWidth = sizeof(DispatchBufferStruct);
+	D3D11_BUFFER_DESC dispatch_buffer_desc;
+	dispatch_buffer_desc.ByteWidth = ByteWidth;
+	dispatch_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+	dispatch_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	dispatch_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	dispatch_buffer_desc.MiscFlags = 0;
+	dispatch_buffer_desc.StructureByteStride = 0;
+
+	hr = g_Device->CreateBuffer(&dispatch_buffer_desc, NULL, &m_dispatchBuffer);
+
+	if (FAILED(hr))
+	{
+		int i = 0;
+	}
 
 }
 HRESULT Update(float deltaTime)
 {
-	if (m_input->IsKeyPressed(VkKeyScan('q'))){	numbers[0] += deltaTime;}
-	if (m_input->IsKeyPressed(VkKeyScan('a'))){	numbers[0] -= deltaTime;}
-	if (m_input->IsKeyPressed(VkKeyScan('w'))){	numbers[1] += deltaTime;}
-	if (m_input->IsKeyPressed(VkKeyScan('s'))){	numbers[1] -= deltaTime;}
-	if (m_input->IsKeyPressed(VkKeyScan('e'))){	numbers[2] += deltaTime;}
-	if (m_input->IsKeyPressed(VkKeyScan('d'))){	numbers[3] -= deltaTime;}
+	Camera::GetInstance()->Update(deltaTime);
+	//if (m_input->IsKeyPressed(VkKeyScan('q'))){ m_cBuffer.x += deltaTime; }
+	//if (m_input->IsKeyPressed(VkKeyScan('a'))){ m_cBuffer.x -= deltaTime; }
+	//if (m_input->IsKeyPressed(VkKeyScan('w'))){ m_cBuffer.y += deltaTime; }
+	//if (m_input->IsKeyPressed(VkKeyScan('s'))){ m_cBuffer.y -= deltaTime; }
+	//if (m_input->IsKeyPressed(VkKeyScan('e'))){ m_cBuffer.z += deltaTime; }
+	//if (m_input->IsKeyPressed(VkKeyScan('d'))){ m_cBuffer.z -= deltaTime; }
 
+	//std::vector<std::pair<std::string, int>> test(1);
+	//test[0] = std::pair<std::string, int>("BLOCK_SIZE_X", 0);
 
-
-	m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(numbers), &numbers, nullptr);
-
+	//test[0].s
 	return S_OK;
+}
+void UpdateDispatchBuffer(int p_x, int p_y)
+{
+	HRESULT hr = S_OK;
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	hr = g_DeviceContext->Map(m_dispatchBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+	if (FAILED(hr))
+	{
+		int i = 0;
+	}
+	DispatchBufferStruct cBuffer;
+	cBuffer.screenHeight = 1600.0f;
+	cBuffer.screenWidth = 1600.0f;
+	cBuffer.x_dispatchCound = p_x;
+	cBuffer.y_dispatchCound = p_y;
+
+	*(DispatchBufferStruct*)mappedResource.pData = cBuffer;
+	g_DeviceContext->Unmap(m_dispatchBuffer, 0);
 }
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
+	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
 
-	g_DeviceContext->CSSetConstantBuffers(0, 1, &m_constantBuffer);
 
-
-
-	g_ComputeShader->Set();
+	g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
 	g_Timer->Start();
-	g_DeviceContext->Dispatch( 25, 25, 1 );
+
+	for (unsigned int x = 0; x < 4; x++)
+	{
+		for (unsigned int y = 0; y < 4; y++)
+		{
+			g_ComputeShader->Set();
+			UpdateDispatchBuffer(x, y);
+			g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
+
+			g_DeviceContext->Dispatch(25, 25, 1);
+			g_ComputeShader->Unset();
+		}
+	}
 	g_Timer->Stop();
-	g_ComputeShader->Unset();
 
 	if(FAILED(g_SwapChain->Present( 0, 0 )))
 		return E_FAIL;
@@ -248,9 +315,8 @@ HRESULT Render(float deltaTime)
 }
 void Shutdown()
 {
-	m_input->Shutdown();
-	delete m_input;
-	m_input = nullptr;
+	InputClass::GetInstance()->Shutdown();
+	Camera::GetInstance()->Shutdown();
 }
 
 //--------------------------------------------------------------------------------------
@@ -278,7 +344,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 	{
 		if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE) )
 		{
-			m_input->Update(msg.message, msg.wParam, msg.lParam);
+			InputClass::GetInstance()->Update(msg.message, msg.wParam, msg.lParam);
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}
@@ -293,7 +359,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 			Render(dt);
 
 			//Clear input
-			m_input->ClearInput();
+			InputClass::GetInstance()->ClearInput();
 
 			prevTimeStamp = currTimeStamp;
 		}
