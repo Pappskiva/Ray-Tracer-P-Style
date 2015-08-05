@@ -72,7 +72,7 @@ struct DispatchBufferStruct
 };
 struct EveryFrameStruct
 {
-	DirectX::XMFLOAT3 cameraPosition;
+	DirectX::XMFLOAT4 cameraPosition;
 	DirectX::XMFLOAT4X4 inverseProjection;
 	DirectX::XMFLOAT4X4 inverseView;
 };
@@ -90,7 +90,9 @@ HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
 void				Shutdown();
 void				Initialize();
+ID3D11Buffer*		CreateDynamicConstantBuffer(int p_size);
 void				UpdateDispatchBuffer(int p_x, int p_y);
+void				UpdateEveryFrameBuffer();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -221,22 +223,39 @@ void Initialize()
 
 	HRESULT hr = S_OK;
 
-	int ByteWidth = sizeof(DispatchBufferStruct);
-	D3D11_BUFFER_DESC dispatch_buffer_desc;
-	dispatch_buffer_desc.ByteWidth = ByteWidth;
-	dispatch_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-	dispatch_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	dispatch_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	dispatch_buffer_desc.MiscFlags = 0;
-	dispatch_buffer_desc.StructureByteStride = 0;
+	int ByteWidth;
 
-	hr = g_Device->CreateBuffer(&dispatch_buffer_desc, NULL, &m_dispatchBuffer);
+	ByteWidth = sizeof(DispatchBufferStruct);
+	m_dispatchBuffer = CreateDynamicConstantBuffer(ByteWidth);
 
+	ByteWidth = sizeof(EveryFrameStruct);
+	m_everyFrameBuffer = CreateDynamicConstantBuffer(ByteWidth);
+
+
+
+}
+ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
+{
+	HRESULT hr = S_OK;
+	ID3D11Buffer* buffer;
+	D3D11_BUFFER_DESC desc;
+	desc.ByteWidth = p_size;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	hr = g_Device->CreateBuffer(&desc, NULL, &buffer);
 	if (FAILED(hr))
 	{
-		int i = 0;
+		return NULL;
 	}
-
+	else
+	{
+		return buffer;
+	}
+	
 }
 HRESULT Update(float deltaTime)
 {
@@ -248,10 +267,9 @@ HRESULT Update(float deltaTime)
 	//if (m_input->IsKeyPressed(VkKeyScan('e'))){ m_cBuffer.z += deltaTime; }
 	//if (m_input->IsKeyPressed(VkKeyScan('d'))){ m_cBuffer.z -= deltaTime; }
 
-	//std::vector<std::pair<std::string, int>> test(1);
-	//test[0] = std::pair<std::string, int>("BLOCK_SIZE_X", 0);
 
-	//test[0].s
+
+	UpdateEveryFrameBuffer();
 	return S_OK;
 }
 void UpdateDispatchBuffer(int p_x, int p_y)
@@ -273,6 +291,33 @@ void UpdateDispatchBuffer(int p_x, int p_y)
 
 	*(DispatchBufferStruct*)mappedResource.pData = cBuffer;
 	g_DeviceContext->Unmap(m_dispatchBuffer, 0);
+}
+void UpdateEveryFrameBuffer()
+{
+	HRESULT hr = S_OK;
+
+	DirectX::XMFLOAT4X4 proj, view, invProj, invView;
+	proj = Camera::GetInstance()->GetProjectionMatrix();
+	view = Camera::GetInstance()->GetViewMatrix();
+
+	DirectX::XMStoreFloat4x4(&invProj, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&proj)));
+	DirectX::XMStoreFloat4x4(&invView, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&view)));
+
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	hr = g_DeviceContext->Map(m_everyFrameBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+	if (FAILED(hr))
+	{
+		int i = 0;
+	}
+	EveryFrameStruct cBuffer;
+	cBuffer.cameraPosition = Camera::GetInstance()->GetCameraPos();
+	cBuffer.inverseProjection = invProj;
+	cBuffer.inverseView = invView;
+
+	*(EveryFrameStruct*)mappedResource.pData = cBuffer;
+	g_DeviceContext->Unmap(m_everyFrameBuffer, 0);
 }
 HRESULT Render(float deltaTime)
 {
@@ -297,6 +342,11 @@ HRESULT Render(float deltaTime)
 		}
 	}
 	g_Timer->Stop();
+
+
+
+
+
 
 	if(FAILED(g_SwapChain->Present( 0, 0 )))
 		return E_FAIL;

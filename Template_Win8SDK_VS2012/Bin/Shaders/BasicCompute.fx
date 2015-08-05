@@ -6,8 +6,8 @@
 
 struct Ray
 {
-	float3 m_origin;
-	float3 m_direction;
+	float4 m_origin;
+	float4 m_direction;
 	//float m_power;
 	//float3 m_color;
 };
@@ -39,7 +39,7 @@ cbuffer everyFrame : register(c0)
 }
 float4 TraceRay(Ray p_ray)
 {
-	return float4(0.0f, 1.0f, 255.0f, 0.0f);
+	return float4(0.0f, 1.0f, 0.0f, 0.0f);
 }
 //Ray CreateRay(uint p_x, uint p_y)
 //{
@@ -58,15 +58,22 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	int2 coord;
 	coord.x = threadID.x + 400 * x_dispatchCound;
 	coord.y = threadID.y + 400 * y_dispatchCound;
-
+	//////////////////////////////////////////////////Create Ray for pixel
 	Ray ray;
-	ray.m_origin = float3(0.0f, 0.0f, 0.0f);//Make into cameraposition
+	ray.m_origin = cameraPosition;
 
 	double normalized_X = ((coord.x / screenWidth) - 0.5f) * 2.0f;
 	double normalized_Y = (1 - (coord.y / screenHeight) - 0.5f) * 2.0f;
 	
-	//float4 imagePoint = mul(float4(normalized_X, normalized_Y, 1.0f,1.0f));
-	//imagePoint /= imagePoint.w;
+	float4 imagePoint = mul(float4(normalized_X, normalized_Y, 1.0f, 1.0f), inverseProjection);
+	imagePoint /= imagePoint.w;
+
+	imagePoint = mul(imagePoint, inverseView);
+
+	ray.m_direction = imagePoint - ray.m_origin;
+	ray.m_direction = normalize(ray.m_direction);
+	//////////////////////////////////////////////////Create Ray for pixel
+
 
 	output[threadID.xy] = TraceRay(ray);
 
