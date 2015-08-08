@@ -1,5 +1,5 @@
 #include "InputClass.h"
-#include <Windows.h>
+#include "Windowsx.h"
 
 
 InputClass* InputClass::m_instance;
@@ -48,15 +48,15 @@ void InputClass::Update(UINT p_message, WPARAM p_wParam, LPARAM p_lParam)
 	}
 	switch (p_message)
 	{
-	//	// Update mouse
-	//case WM_MOUSEMOVE:
-	//{
-	//	m_mousePositionX_prev = m_mousePositionX;
-	//	m_mousePositionY_prev = m_mousePositionY;
-	//	m_mousePositionX = GET_X_LPARAM(p_lParam);
-	//	m_mousePositionY = GET_Y_LPARAM(p_lParam);
-	//	break;
-	//}
+		// Update mouse
+	case WM_MOUSEMOVE:
+	{
+		m_mousePositionX_prev = m_mousePositionX;
+		m_mousePositionY_prev = m_mousePositionY;
+		m_mousePositionX = GET_X_LPARAM(p_lParam);
+		m_mousePositionY = GET_Y_LPARAM(p_lParam);
+		break;
+	}
 
 	case WM_LBUTTONDOWN:
 	{

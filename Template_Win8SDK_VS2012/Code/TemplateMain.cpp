@@ -260,12 +260,6 @@ ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
 HRESULT Update(float deltaTime)
 {
 	Camera::GetInstance()->Update(deltaTime);
-	//if (m_input->IsKeyPressed(VkKeyScan('q'))){ m_cBuffer.x += deltaTime; }
-	//if (m_input->IsKeyPressed(VkKeyScan('a'))){ m_cBuffer.x -= deltaTime; }
-	//if (m_input->IsKeyPressed(VkKeyScan('w'))){ m_cBuffer.y += deltaTime; }
-	//if (m_input->IsKeyPressed(VkKeyScan('s'))){ m_cBuffer.y -= deltaTime; }
-	//if (m_input->IsKeyPressed(VkKeyScan('e'))){ m_cBuffer.z += deltaTime; }
-	//if (m_input->IsKeyPressed(VkKeyScan('d'))){ m_cBuffer.z -= deltaTime; }
 
 
 
@@ -322,7 +316,7 @@ void UpdateEveryFrameBuffer()
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer };
+	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
 
 
@@ -335,15 +329,13 @@ HRESULT Render(float deltaTime)
 		{
 			g_ComputeShader->Set();
 			UpdateDispatchBuffer(x, y);
-			g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
+			g_DeviceContext->CSSetConstantBuffers(0, 2, bufferArray);
 
 			g_DeviceContext->Dispatch(25, 25, 1);
 			g_ComputeShader->Unset();
 		}
 	}
 	g_Timer->Stop();
-
-
 
 
 

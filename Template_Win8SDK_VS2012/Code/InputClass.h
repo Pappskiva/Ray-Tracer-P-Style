@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <Windows.h>
 
 typedef _W64 unsigned int UINT_PTR;
 typedef long LPARAM;
@@ -68,4 +69,8 @@ private:
 	char m_lastCharRead;
 
 	static InputClass* m_instance;
+	int m_mousePositionX;
+	int m_mousePositionY;
+	int m_mousePositionX_prev;
+	int m_mousePositionY_prev;
 };

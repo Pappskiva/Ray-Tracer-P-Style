@@ -24,6 +24,9 @@ private:
 	~Camera();
 	static Camera* m_instance;
 
+	void UpdateKeyboard();
+	void UpdateMouse();
+
 	DirectX::XMFLOAT4 m_cameraPosition;
 	DirectX::XMFLOAT4X4 m_projectionMatrix;
 	DirectX::XMFLOAT4X4 m_viewMatrix;
@@ -31,5 +34,7 @@ private:
 	DirectX::XMFLOAT4 m_up;
 	DirectX::XMFLOAT4 m_right;
 	DirectX::XMFLOAT4 m_look;
+
+	float m_moveSpeed;
 };
 

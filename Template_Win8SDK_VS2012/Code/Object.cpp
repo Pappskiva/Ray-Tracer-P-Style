@@ -20,4 +20,3 @@ void Object::LoadObj()
 {
 
 }
-

@@ -1,5 +1,5 @@
 #include "Camera.h"
-
+#include "InputClass.h"
 Camera* Camera::m_instance;
 Camera::Camera(){}
 Camera::~Camera(){}
@@ -22,10 +22,34 @@ void Camera::Initialize()
 	DirectX::XMStoreFloat4x4(&m_projectionMatrix, DirectX::XMMatrixIdentity());
 	DirectX::XMStoreFloat4x4(&m_viewMatrix, DirectX::XMMatrixIdentity());
 	SetLens(DirectX::XM_PIDIV4, 1.0f, 1.0f, 1000.0f);
+	m_moveSpeed = 0.0f;
 }
 void Camera::Update(float p_deltaTime)
 {
+	m_moveSpeed = p_deltaTime;
+	UpdateKeyboard();
+	UpdateMouse();
+}
+void Camera::UpdateKeyboard()
+{
+	//if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('q'))){ m_cBuffer.x += m_moveSpeed; }
+	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('a'))){ m_cameraPosition.x -= m_moveSpeed; }
+	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('w'))){ m_cameraPosition.z += m_moveSpeed; }
+	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('s'))){ m_cameraPosition.z -= m_moveSpeed; }
+	//if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('e'))){ m_cBuffer.z += m_moveSpeed; }
+	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('d'))){ m_cameraPosition.x += m_moveSpeed; }
 
+}
+void Camera::UpdateMouse()
+{
+	if (InputClass::GetInstance()->IsLeftMousePressed())
+	{
+		m_look.z += m_moveSpeed;
+	}
+	if (InputClass::GetInstance()->IsRightMouseClicked())
+	{
+		m_look.z -= m_moveSpeed;
+	}
 }
 void Camera::Shutdown()
 {
