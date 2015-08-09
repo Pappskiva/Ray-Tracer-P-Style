@@ -1,15 +1,16 @@
 #pragma once
 #include <DirectXMath.h>
+#include <vector>
 class Camera
 {
 public:
 	Camera(const Camera&) = delete;
 	Camera& operator=(const Camera&) = delete;
-	static Camera* GetInstance();
+	static Camera* GetInstance(int p_index);
 
 	void Initialize();
 	void Update(float p_deltaTime);
-	void Shutdown();
+	void Shutdown(int p_index);
 	DirectX::XMFLOAT4 GetCameraPos();
 
 	void SetLens(float p_fovy, float p_aspect, float p_zNear, float p_zFar);
@@ -22,7 +23,7 @@ public:
 private:
 	Camera();
 	~Camera();
-	static Camera* m_instance;
+	static std::vector<Camera*> m_instance;
 
 	void UpdateKeyboard();
 	void UpdateMouse();

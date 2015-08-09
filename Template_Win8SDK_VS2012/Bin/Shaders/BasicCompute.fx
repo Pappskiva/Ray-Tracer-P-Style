@@ -52,10 +52,85 @@ cbuffer everyFrame : register(c0)
 	float4x4 inverseView;
 }
 
+//Forward Declare
+float4 RaySphereIntersectionTest(float4 p_rayOrigin, float4 p_rayDirection, float3 p_spherePos, float p_sphereRadius, float4 p_color);
+
+Ray CreateRay(uint p_x, uint p_y)
+{
+	Ray ray;
+	ray.m_origin = cameraPosition;
+
+	double normalized_X = ((p_x / screenWidth) - 0.5f) * 2.0f;
+	double normalized_Y = (1 - (p_y / screenHeight) - 0.5f) * 2.0f;
+
+	float4 imagePoint = mul(float4(normalized_X, normalized_Y, 1.0f, 1.0f), inverseProjection);
+		imagePoint /= imagePoint.w;
+
+	imagePoint = mul(imagePoint, inverseView);
+
+	ray.m_direction = imagePoint - ray.m_origin;
+	ray.m_direction = normalize(ray.m_direction);
+
+	return ray;
+}
+float4 TraceRay(Ray p_ray)
+{
+	float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+	float sphereRadius = 0.5f;
+	Ray ray;
+	ray.m_origin = p_ray.m_origin;
+	ray.m_direction = p_ray.m_direction;
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 0.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
+	else{ return returnColor; }
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 1.0f, 1.0f), sphereRadius, float4(0.0f, 1.0f, 1.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); */ }
+	else{ return returnColor; }
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(1.0f, 0.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
+	else{ return returnColor; }
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(1.0f, 1.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); */ }
+	else{ return returnColor; }
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 0.0f, -1.0f), sphereRadius, float4(1.0f, 1.0f, 0.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); */ }
+	else{ return returnColor; }
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 1.0f, -1.0f), sphereRadius, float4(0.0f, 1.0f, 0.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){/* returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
+	else{ return returnColor; }
+
+	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 0.0f, -1.0f), sphereRadius, float4(1.0f, 0.0f, 0.0f, 0.0f));
+	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
+	else{ return returnColor; }
 
 
+	return returnColor;
 
+	//float vtc = 0.0f;
+	//
+	//float x = p_rayOrigin.x;
+	//float y = p_rayOrigin.y;
+	//
+	//float value = (x*x) + (y*y);
+	//vtc = sqrt(value);
+	//if (vtc < 1000.0f)
+	//{
+	//	return float4(0.0f, 1.0f, 0.0f, 0.0f);
+	//}
+	//else
+	//{
+	//	return float4(0.0f, 0.0f, 0.0f, 0.0f);
+	//}
+}
 
+//Intersection Tests
 float4 RaySphereIntersectionTest(float4 p_rayOrigin, float4 p_rayDirection, float3 p_spherePos, float p_sphereRadius, float4 p_color)
 {
 	float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -106,58 +181,6 @@ float4 RaySphereIntersectionTest(float4 p_rayOrigin, float4 p_rayDirection, floa
 
 	return returnColor;
 }
-float4 TraceRay(float4 p_rayOrigin, float4 p_rayDirection)
-{
-	float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
-
-
-	return returnColor;
-	//float sphereRadius = 1.5f;
-	//
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(0.0f, 0.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
-	//else{ return returnColor; }
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(0.0f, 1.0f, 1.0f), sphereRadius, float4(0.0f, 1.0f, 1.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); */}
-	//else{ return returnColor; }
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(1.0f, 0.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
-	//else{ return returnColor; }
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(1.0f, 1.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); */}
-	//else{ return returnColor; }
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(0.0f, 0.0f, -1.0f), sphereRadius, float4(1.0f, 1.0f, 0.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); */}
-	//else{ return returnColor; }
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(0.0f, 1.0f, -1.0f), sphereRadius, float4(0.0f, 1.0f, 0.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){/* returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
-	//else{ return returnColor; }
-	//
-	//returnColor = RaySphereIntersectionTest(p_rayOrigin, p_rayDirection, float3(0.0f, 0.0f, -1.0f), sphereRadius, float4(1.0f, 0.0f, 0.0f, 0.0f));
-	//if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ /*returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);*/ }
-	//else{ return returnColor; }
-	//float vtc = 0.0f;
-	//
-	//float x = p_rayOrigin.x;
-	//float y = p_rayOrigin.y;
-	//
-	//float value = (x*x) + (y*y);
-	//vtc = sqrt(value);
-	//if (vtc < 1000.0f)
-	//{
-	//	return float4(0.0f, 1.0f, 0.0f, 0.0f);
-	//}
-	//else
-	//{
-	//	return float4(0.0f, 0.0f, 0.0f, 0.0f);
-	//}
-}
 
 RWTexture2D<float4>						output								: register(u0);
 RWStructuredBuffer<float>				temp								: register(u1);
@@ -179,22 +202,10 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	
 	//////////////////////////////////////////////////Primary Ray Stage
 	Ray ray;
-	ray.m_origin = cameraPosition;
-
-	double normalized_X = ((coord.x / screenWidth) - 0.5f) * 2.0f;
-	double normalized_Y = (1 - (coord.y / screenHeight) - 0.5f) * 2.0f;
-	
-	float4 imagePoint = mul(float4(normalized_X, normalized_Y, 1.0f, 1.0f), inverseProjection);
-	imagePoint /= imagePoint.w;
-
-	imagePoint = mul(imagePoint, inverseView);
-
-	ray.m_direction = imagePoint - ray.m_origin;
-	ray.m_direction = normalize(ray.m_direction);
+	ray = CreateRay(coord.x, coord.y);
 	//////////////////////////////////////////////////Primary Ray Stage
 	//////////////////////////////////////////////////Interaction Stage
-
-	float4 finalColor = TraceRay(ray.m_origin, ray.m_direction);
+	float4 finalColor = TraceRay(ray);
 
 	//////////////////////////////////////////////////Interaction Stage
 	//////////////////////////////////////////////////Color Stage

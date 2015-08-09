@@ -1,5 +1,7 @@
 
 #include <DirectXMath.h>
+#define LIGHT_COUNT 3
+#define SPHERE_COUNT 3
 
 struct DispatchBufferStruct
 {
@@ -46,5 +48,17 @@ struct TriangleDescription
 
 struct Primitive
 {
-	SphereStruct Sphere[3];
+	SphereStruct Sphere[SPHERE_COUNT];
+};
+
+
+struct PointLightData
+{
+	DirectX::XMFLOAT4 position;
+	DirectX::XMFLOAT4 color;
+};
+
+struct LightBuffer
+{
+	PointLightData pointLight[LIGHT_COUNT];
 };

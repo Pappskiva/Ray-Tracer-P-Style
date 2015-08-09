@@ -59,6 +59,7 @@ D3D11Timer*				g_Timer					= NULL;
 ///////////////////////////////////////////////////New variables//////////////////////////
 ID3D11Buffer*			m_everyFrameBuffer = nullptr;
 ID3D11Buffer*			m_dispatchBuffer = nullptr;
+ID3D11Buffer*			m_lightBuffer = nullptr;
 ID3D11ShaderResourceView* m_objectNormalSRV = nullptr;
 ID3D11ShaderResourceView* m_triangleSRV = nullptr;
 ID3D11ShaderResourceView* m_vertexSRV = nullptr;
@@ -67,6 +68,7 @@ std::vector<DirectX::XMFLOAT4> m_allTriangleVertex;
 std::vector<TriangleDescription> m_allTriangleIndex;
 std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
 std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
+int m_cameraIndex = 0;
 
 //ConstantBuffer m_cBuffer;
 ///////////////////////////////////////////////////New variables//////////////////////////
@@ -85,9 +87,11 @@ void				Initialize();
 ID3D11Buffer*		CreateDynamicConstantBuffer(int p_size);
 void				UpdateDispatchBuffer(int p_x, int p_y);
 void				UpdateEveryFrameBuffer();
+void				UpdateLightBuffer();
 void				LoadObjectData();
 void				LoadMesh(char* p_path);
 void				CreateObjectBuffer();
+void				CreateLightBuffer();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -201,7 +205,7 @@ HRESULT Init()
 }
 void Initialize()
 {
-	Camera::GetInstance()->Initialize();
+	Camera::GetInstance(m_cameraIndex)->Initialize();
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('q'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('w'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('e'));
@@ -221,7 +225,34 @@ void Initialize()
 
 	LoadObjectData();
 	CreateObjectBuffer();
+	CreateLightBuffer();
+	UpdateLightBuffer();
+}
+void CreateLightBuffer()
+{
+	D3D11_BUFFER_DESC lightData;
+	lightData.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightData.Usage = D3D11_USAGE_DYNAMIC;
+	lightData.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightData.MiscFlags = 0;
+	lightData.ByteWidth = sizeof(LightBuffer);
+	HRESULT hr = g_Device->CreateBuffer(&lightData, NULL, &m_lightBuffer);
+	if (FAILED(hr))
+	{
 
+	}
+}
+void UpdateLightBuffer()
+{
+	D3D11_MAPPED_SUBRESOURCE lightResource;
+	g_DeviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0,&lightResource);
+	LightBuffer light;
+
+	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
+	{
+		light.pointLight[i].position = Camera::GetInstance(i)->GetCameraPos();
+		light.pointLight[i].color = DirectX::XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
+	}
 }
 void LoadObjectData()
 {
@@ -446,11 +477,12 @@ ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
 }
 HRESULT Update(float deltaTime)
 {
-	Camera::GetInstance()->Update(deltaTime);
+	Camera::GetInstance(m_cameraIndex)->Update(deltaTime);
 
 
 
 	UpdateEveryFrameBuffer();
+	UpdateLightBuffer();
 	return S_OK;
 }
 void UpdateDispatchBuffer(int p_x, int p_y)
@@ -478,8 +510,8 @@ void UpdateEveryFrameBuffer()
 	HRESULT hr = S_OK;
 
 	DirectX::XMFLOAT4X4 proj, view, invProj, invView;
-	proj = Camera::GetInstance()->GetProjectionMatrix();
-	view = Camera::GetInstance()->GetViewMatrix();
+	proj = Camera::GetInstance(m_cameraIndex)->GetProjectionMatrix();
+	view = Camera::GetInstance(m_cameraIndex)->GetViewMatrix();
 
 	DirectX::XMStoreFloat4x4(&invProj, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&proj)));
 	DirectX::XMStoreFloat4x4(&invView, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&view)));
@@ -493,7 +525,7 @@ void UpdateEveryFrameBuffer()
 		int i = 0;
 	}
 	EveryFrameStruct cBuffer;
-	cBuffer.cameraPosition = Camera::GetInstance()->GetCameraPos();
+	cBuffer.cameraPosition = Camera::GetInstance(m_cameraIndex)->GetCameraPos();
 	cBuffer.inverseProjection = invProj;
 	cBuffer.inverseView = invView;
 
@@ -503,12 +535,12 @@ void UpdateEveryFrameBuffer()
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer };
+	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer, m_lightBuffer };
 	ID3D11ShaderResourceView* srvArray[] = { m_objectNormalSRV, m_texCoordSRV, m_triangleSRV, m_vertexSRV };
 
 
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
-	g_DeviceContext->CSSetConstantBuffers(0, 2, bufferArray);
+	g_DeviceContext->CSSetConstantBuffers(0, 3, bufferArray);
 	g_DeviceContext->CSSetShaderResources(0, 4, srvArray);
 
 
@@ -550,8 +582,11 @@ HRESULT Render(float deltaTime)
 void Shutdown()
 {
 	InputClass::GetInstance()->Shutdown();
-	Camera::GetInstance()->Shutdown();
 	Object::GetObjectLoader()->Shutdown();
+	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
+	{			
+		Camera::GetInstance(i)->Shutdown(i);
+	}
 }
 
 //--------------------------------------------------------------------------------------

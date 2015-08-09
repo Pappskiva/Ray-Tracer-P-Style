@@ -1,16 +1,16 @@
 #include "Camera.h"
 #include "InputClass.h"
-Camera* Camera::m_instance;
+std::vector<Camera*> Camera::m_instance = std::vector<Camera*>(10);
 Camera::Camera(){}
 Camera::~Camera(){}
-Camera* Camera::GetInstance()
+Camera* Camera::GetInstance(int p_index)
 {
-	if (m_instance == nullptr)
+	if (m_instance.at(p_index) == nullptr)
 	{
-		m_instance = new Camera;
-		m_instance->Initialize();
+		m_instance.at(p_index) = new Camera;
+		m_instance.at(p_index)->Initialize();
 	}
-	return m_instance;
+	return m_instance.at(p_index);
 }
 void Camera::Initialize()
 {
@@ -52,15 +52,14 @@ void Camera::UpdateMouse()
 		m_look.z -= m_moveSpeed;
 	}
 }
-void Camera::Shutdown()
+void Camera::Shutdown(int p_index)
 {
-	if (m_instance != nullptr)
+	if (m_instance[p_index] != nullptr)
 	{
-		delete m_instance;
-		m_instance = 0;
+		delete m_instance[p_index];
+		m_instance[p_index] = 0;
 	}
 }
-
 
 
 
