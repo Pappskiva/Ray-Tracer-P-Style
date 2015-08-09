@@ -28,7 +28,6 @@
 	}
 */
 #include <DirectXTex.h>
-#include <DirectXMath.h>
 #if defined( DEBUG ) || defined( _DEBUG )
 #pragma comment(lib, "DirectXTexD.lib")
 #else
@@ -37,6 +36,8 @@
 
 #include "InputClass.h"
 #include "Camera.h"
+#include "Object.h"
+
 
 //--------------------------------------------------------------------------------------
 // Global Variables
@@ -58,24 +59,15 @@ D3D11Timer*				g_Timer					= NULL;
 ///////////////////////////////////////////////////New variables//////////////////////////
 ID3D11Buffer*			m_everyFrameBuffer = nullptr;
 ID3D11Buffer*			m_dispatchBuffer = nullptr;
+ID3D11ShaderResourceView* m_objectNormalSRV = nullptr;
+ID3D11ShaderResourceView* m_triangleSRV = nullptr;
+ID3D11ShaderResourceView* m_vertexSRV = nullptr;
+ID3D11ShaderResourceView* m_texCoordSRV = nullptr;
+std::vector<DirectX::XMFLOAT4> m_allTriangleVertex;
+std::vector<TriangleDescription> m_allTriangleIndex;
+std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
+std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
 
-//DirectX::XMFLOAT3 m_cameraPosition = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-//DirectX::XMFLOAT3 m_upVector = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-//DirectX::XMFLOAT3 m_cameraDirection = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-
-struct DispatchBufferStruct
-{
-	float screenWidth;
-	float screenHeight;
-	int x_dispatchCound;
-	int y_dispatchCound;
-};
-struct EveryFrameStruct
-{
-	DirectX::XMFLOAT4 cameraPosition;
-	DirectX::XMFLOAT4X4 inverseProjection;
-	DirectX::XMFLOAT4X4 inverseView;
-};
 //ConstantBuffer m_cBuffer;
 ///////////////////////////////////////////////////New variables//////////////////////////
 
@@ -93,6 +85,9 @@ void				Initialize();
 ID3D11Buffer*		CreateDynamicConstantBuffer(int p_size);
 void				UpdateDispatchBuffer(int p_x, int p_y);
 void				UpdateEveryFrameBuffer();
+void				LoadObjectData();
+void				LoadMesh(char* p_path);
+void				CreateObjectBuffer();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -213,14 +208,7 @@ void Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('a'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('s'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('d'));
-
-	//DispatchBufferStruct cBuffer;
-	//cBuffer.screenHeight = 0;
-	//cBuffer.screenWidth = 0;
-	//cBuffer.x_dispatchCound = 0;
-	//cBuffer.y_dispatchCound = 0;
-	//m_constantBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(cBuffer), &cBuffer, nullptr);
-
+	
 	HRESULT hr = S_OK;
 
 	int ByteWidth;
@@ -231,7 +219,206 @@ void Initialize()
 	ByteWidth = sizeof(EveryFrameStruct);
 	m_everyFrameBuffer = CreateDynamicConstantBuffer(ByteWidth);
 
+	LoadObjectData();
+	CreateObjectBuffer();
 
+}
+void LoadObjectData()
+{
+	LoadMesh("..\\Objects\\ROOM.obj");
+
+}
+void LoadMesh(char* p_path)
+{
+	std::vector<DirectX::XMFLOAT4>* rawVertex = nullptr;
+	std::vector<DirectX::XMFLOAT2>* rawTexCoord = nullptr;
+	std::vector<TriangleDescription>* triangleDescription= nullptr;
+	std::vector<DirectX::XMFLOAT3>* rawNormal = nullptr;
+
+	Object::GetObjectLoader()->LoadObject(p_path, &rawVertex, &rawTexCoord, &triangleDescription, &rawNormal);
+
+	int allVertexSize = m_allTriangleVertex.size();
+	int allTexCoordSize = m_allTriangleTexCoord.size();
+	int allTriangleIndexSize = m_allTriangleIndex.size();
+	int allTriangleNormalSize = m_allTriangleNormal.size();
+
+	//move raw vertices
+	for (unsigned int i = 0; i < rawVertex->size(); i++)
+	{
+		m_allTriangleVertex.push_back(rawVertex->at(i));
+	}
+
+	//move raw triangle coords
+	for (unsigned int i = 0; i < rawTexCoord->size(); i++)
+	{
+		m_allTriangleTexCoord.push_back(rawTexCoord->at(i));
+	}
+
+	//move triangle description
+	for (unsigned int i = 0; i < triangleDescription->size(); i++)
+	{
+		m_allTriangleIndex.push_back(triangleDescription->at(i));
+	}
+
+	//update triangle description indexes
+	if (allVertexSize != 0)
+	{
+		for (unsigned int i = 0; i < m_allTriangleIndex.size(); i++)
+		{
+			m_allTriangleIndex.at(i).Point1 += allVertexSize;
+			m_allTriangleIndex.at(i).Point2 += allVertexSize;
+			m_allTriangleIndex.at(i).Point3 += allVertexSize;
+			m_allTriangleIndex.at(i).TexCoord1 += allTexCoordSize;
+			m_allTriangleIndex.at(i).TexCoord2 += allTexCoordSize;
+			m_allTriangleIndex.at(i).TexCoord3 += allTexCoordSize;
+			m_allTriangleIndex.at(i).NormalIndex += allTriangleNormalSize;
+		}
+	}
+
+	for (unsigned int i = 0; i < rawNormal->size(); i++)
+	{
+		m_allTriangleNormal.push_back(rawNormal->at(i));
+	}
+}
+void CreateObjectBuffer()
+{
+	HRESULT hr;
+	D3D11_SUBRESOURCE_DATA data;
+	int ByteWidth;
+
+	ID3D11Buffer*			vertexBuffer = nullptr;
+	ID3D11Buffer*			triangleBuffer = nullptr;
+	ID3D11Buffer*			texCoordBuffer = nullptr;
+	ID3D11Buffer*			objectNormalBuffer = nullptr;
+	////////////////////////////////////////////////////////////////////////////////////////
+	//Raw Vertex
+	data.pSysMem = m_allTriangleVertex.data();
+
+	D3D11_BUFFER_DESC rawVertex;
+	rawVertex.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	rawVertex.Usage = D3D11_USAGE_DEFAULT;
+	rawVertex.CPUAccessFlags = 0;
+	rawVertex.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	ByteWidth = m_allTriangleVertex.size() * sizeof(DirectX::XMFLOAT4);
+	rawVertex.ByteWidth = ByteWidth;
+	rawVertex.StructureByteStride = sizeof(DirectX::XMFLOAT4);
+	hr = g_Device->CreateBuffer(&rawVertex, &data, &vertexBuffer);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC vertexSRV;
+	ZeroMemory(&vertexSRV, sizeof(vertexSRV));
+	vertexSRV.Buffer.ElementOffset = 0;
+	vertexSRV.Buffer.FirstElement = 0;
+	vertexSRV.Buffer.NumElements = m_allTriangleVertex.size();
+	vertexSRV.Format = DXGI_FORMAT_UNKNOWN;
+	vertexSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	hr = g_Device->CreateShaderResourceView(vertexBuffer, &vertexSRV, &m_vertexSRV);
+	if (FAILED(hr))
+	{
+		return;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	//Raw tex coord
+	data.pSysMem = m_allTriangleTexCoord.data();
+
+	D3D11_BUFFER_DESC rawTexCoord;
+	rawTexCoord.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	rawTexCoord.Usage = D3D11_USAGE_DEFAULT;
+	rawTexCoord.CPUAccessFlags = 0;
+	rawTexCoord.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	ByteWidth = m_allTriangleTexCoord.size() * sizeof(DirectX::XMFLOAT2);
+	rawTexCoord.ByteWidth = ByteWidth;
+	rawTexCoord.StructureByteStride = sizeof(DirectX::XMFLOAT2);
+	hr = g_Device->CreateBuffer(&rawTexCoord, &data, &texCoordBuffer);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC texCoordSRV;
+	ZeroMemory(&texCoordSRV, sizeof(texCoordSRV));
+	texCoordSRV.Buffer.ElementOffset = 0;
+	texCoordSRV.Buffer.FirstElement = 0;
+	texCoordSRV.Buffer.NumElements = m_allTriangleTexCoord.size();
+	texCoordSRV.Format = DXGI_FORMAT_UNKNOWN;
+	texCoordSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	hr = g_Device->CreateShaderResourceView(texCoordBuffer, &texCoordSRV, &m_texCoordSRV);
+	if (FAILED(hr))
+	{
+		return;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////
+	//Trianel Description
+	data.pSysMem = m_allTriangleIndex.data();
+
+	D3D11_BUFFER_DESC triangleBufferDesc;
+	triangleBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	triangleBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	triangleBufferDesc.CPUAccessFlags = 0;
+	triangleBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	ByteWidth = m_allTriangleIndex.size() * sizeof(TriangleDescription);
+	triangleBufferDesc.ByteWidth = ByteWidth;
+	triangleBufferDesc.StructureByteStride = sizeof(TriangleDescription);
+	hr = g_Device->CreateBuffer(&triangleBufferDesc, &data, &triangleBuffer);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC triangliIndexSRV;
+	ZeroMemory(&triangliIndexSRV, sizeof(triangliIndexSRV));
+	triangliIndexSRV.Buffer.ElementOffset = 0;
+	triangliIndexSRV.Buffer.FirstElement = 0;
+	triangliIndexSRV.Buffer.NumElements = m_allTriangleIndex.size();
+	triangliIndexSRV.Format = DXGI_FORMAT_UNKNOWN;
+	triangliIndexSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	hr = g_Device->CreateShaderResourceView(triangleBuffer, &triangliIndexSRV, &m_triangleSRV);
+	if (FAILED(hr))
+	{
+		return;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////
+	//Raw normals
+	data.pSysMem = m_allTriangleNormal.data();
+
+	D3D11_BUFFER_DESC noramlDesc;
+	noramlDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	noramlDesc.Usage = D3D11_USAGE_DEFAULT;
+	noramlDesc.CPUAccessFlags = 0;
+	noramlDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	ByteWidth = m_allTriangleNormal.size() * sizeof(DirectX::XMFLOAT3);
+	noramlDesc.ByteWidth = ByteWidth;
+	noramlDesc.StructureByteStride = sizeof(DirectX::XMFLOAT3);
+	hr = g_Device->CreateBuffer(&noramlDesc, &data, &objectNormalBuffer);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC normalSRV;
+	ZeroMemory(&normalSRV, sizeof(normalSRV));
+	normalSRV.Buffer.ElementOffset = 0;
+	normalSRV.Buffer.FirstElement = 0;
+	normalSRV.Buffer.NumElements = m_allTriangleNormal.size();
+	normalSRV.Format = DXGI_FORMAT_UNKNOWN;
+	normalSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	hr = g_Device->CreateShaderResourceView(objectNormalBuffer, &normalSRV, &m_objectNormalSRV);
+	if (FAILED(hr))
+	{
+		return;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
+	delete objectNormalBuffer;
+	delete vertexBuffer;
+	delete texCoordBuffer;
+	delete triangleBuffer;
 
 }
 ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
@@ -317,7 +504,12 @@ HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer };
+	ID3D11ShaderResourceView* srvArray[] = { m_objectNormalSRV, m_texCoordSRV, m_triangleSRV, m_vertexSRV };
+
+
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
+	g_DeviceContext->CSSetConstantBuffers(0, 2, bufferArray);
+	g_DeviceContext->CSSetShaderResources(0, 4, srvArray);
 
 
 	g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
@@ -359,6 +551,7 @@ void Shutdown()
 {
 	InputClass::GetInstance()->Shutdown();
 	Camera::GetInstance()->Shutdown();
+	Object::GetObjectLoader()->Shutdown();
 }
 
 //--------------------------------------------------------------------------------------

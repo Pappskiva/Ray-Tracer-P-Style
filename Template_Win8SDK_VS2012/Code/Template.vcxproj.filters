@@ -22,9 +22,6 @@
     <ClCompile Include="D3D11Timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ObjClass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="InputClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -36,9 +33,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ObjClass.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="D3D11Timer.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -51,8 +45,13 @@
     <ClInclude Include="InputClass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h" />
     <ClInclude Include="Object.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Structures.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

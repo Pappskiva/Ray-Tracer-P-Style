@@ -207,7 +207,6 @@
     <ClCompile Include="ComputeHelp.cpp" />
     <ClCompile Include="D3D11Timer.cpp" />
     <ClCompile Include="InputClass.cpp" />
-    <ClCompile Include="ObjClass.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="TemplateMain.cpp" />
   </ItemGroup>
@@ -215,8 +214,8 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ComputeHelp.h" />
     <ClInclude Include="D3D11Timer.h" />
+    <ClInclude Include="Structures.h" />
     <ClInclude Include="InputClass.h" />
-    <ClInclude Include="ObjClass.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
