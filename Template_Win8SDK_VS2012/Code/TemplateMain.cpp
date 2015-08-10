@@ -10,6 +10,7 @@
 #include "ComputeHelp.h"
 #include "D3D11Timer.h"
 #include <vector>
+#include "DDSTextureLoader\DDSTextureLoader.h"
 
 /*	DirectXTex library - for usage info, see http://directxtex.codeplex.com/
 	
@@ -60,10 +61,12 @@ D3D11Timer*				g_Timer					= NULL;
 ID3D11Buffer*			m_everyFrameBuffer = nullptr;
 ID3D11Buffer*			m_dispatchBuffer = nullptr;
 ID3D11Buffer*			m_lightBuffer = nullptr;
+ID3D11Buffer*			m_primitiveBuffer = nullptr;
 ID3D11ShaderResourceView* m_objectNormalSRV = nullptr;
 ID3D11ShaderResourceView* m_triangleSRV = nullptr;
 ID3D11ShaderResourceView* m_vertexSRV = nullptr;
 ID3D11ShaderResourceView* m_texCoordSRV = nullptr;
+ID3D11ShaderResourceView* m_smallBoxTexture = nullptr;
 std::vector<DirectX::XMFLOAT4> m_allTriangleVertex;
 std::vector<TriangleDescription> m_allTriangleIndex;
 std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
@@ -92,6 +95,8 @@ void				LoadObjectData();
 void				LoadMesh(char* p_path);
 void				CreateObjectBuffer();
 void				CreateLightBuffer();
+void				CreatePrimitiveBuffer();
+void				UpdatePrimitiveBuffer();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -227,6 +232,15 @@ void Initialize()
 	CreateObjectBuffer();
 	CreateLightBuffer();
 	UpdateLightBuffer();
+
+	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_Texture.dds", nullptr, &m_smallBoxTexture);
+	if (FAILED(hr))
+	{
+		int i = 0;
+	}
+	CreatePrimitiveBuffer();
+	UpdatePrimitiveBuffer();
+
 }
 void CreateLightBuffer()
 {
@@ -532,19 +546,69 @@ void UpdateEveryFrameBuffer()
 	*(EveryFrameStruct*)mappedResource.pData = cBuffer;
 	g_DeviceContext->Unmap(m_everyFrameBuffer, 0);
 }
+void CreatePrimitiveBuffer()
+{
+	D3D11_BUFFER_DESC primitiveData;
+	primitiveData.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	primitiveData.Usage = D3D11_USAGE_DYNAMIC;
+	primitiveData.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	primitiveData.MiscFlags = 0;
+	primitiveData.ByteWidth = sizeof(Primitive);
+
+	HRESULT hr = S_OK;
+	hr = g_Device->CreateBuffer(&primitiveData, NULL, &m_primitiveBuffer);
+	if (FAILED(hr))
+	{
+		int i = 0;
+	}
+}
+void UpdatePrimitiveBuffer()
+{
+	D3D11_MAPPED_SUBRESOURCE primitiveResource;
+	g_DeviceContext->Map(m_primitiveBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &primitiveResource);
+
+	Primitive prim;
+	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 500.0f, 700.0f, 1.0f);
+	prim.Sphere[0].radius = 200.0f;
+	prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 0.50f);
+
+	prim.Sphere[1].center = DirectX::XMFLOAT4(-900.0f, 500.0f, 700.0f, 1.0f);
+	prim.Sphere[1].radius = 200.0f;
+	prim.Sphere[1].color = DirectX::XMFLOAT3(0.50f, 0.0f, 0.0f);
+
+	prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
+	prim.Sphere[2].radius = 200.0f;
+	prim.Sphere[2].color = DirectX::XMFLOAT3(0.0f, 0.50f, 0.0f);
+
+	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
+	{
+		float ambient = 0.1f;
+		float diffuse = 0.7f;
+		float specular = 1.0f;
+
+		prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
+		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
+		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
+		prim.Sphere[i].material.shininess = 50.0f;
+		prim.Sphere[i].material.isReflective = 1.0f;
+		prim.Sphere[i].material.reflectiveFactor = 1.0f;
+	}
+
+	*(Primitive*)primitiveResource.pData = prim;
+	g_DeviceContext->Unmap(m_primitiveBuffer, 0);
+}
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer, m_lightBuffer };
-	ID3D11ShaderResourceView* srvArray[] = { m_objectNormalSRV, m_texCoordSRV, m_triangleSRV, m_vertexSRV };
-
+	ID3D11Buffer* bufferArray[] = { m_everyFrameBuffer, m_primitiveBuffer, m_lightBuffer , m_dispatchBuffer};
+	ID3D11ShaderResourceView* srvArray[] = { m_vertexSRV, m_triangleSRV, m_objectNormalSRV, m_texCoordSRV, m_smallBoxTexture };
+	
 
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
-	g_DeviceContext->CSSetConstantBuffers(0, 3, bufferArray);
-	g_DeviceContext->CSSetShaderResources(0, 4, srvArray);
+	g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
+	g_DeviceContext->CSSetShaderResources(0, 5, srvArray);
 
 
-	g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
 	g_Timer->Start();
 
 	for (unsigned int x = 0; x < 4; x++)
@@ -553,7 +617,7 @@ HRESULT Render(float deltaTime)
 		{
 			g_ComputeShader->Set();
 			UpdateDispatchBuffer(x, y);
-			g_DeviceContext->CSSetConstantBuffers(0, 2, bufferArray);
+			g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
 
 			g_DeviceContext->Dispatch(25, 25, 1);
 			g_ComputeShader->Unset();
