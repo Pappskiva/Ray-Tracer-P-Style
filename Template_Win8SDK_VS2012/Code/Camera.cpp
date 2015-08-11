@@ -25,11 +25,13 @@ void Camera::Initialize()
 	m_moveSpeed = 0.0f;
 
 }
-void Camera::Update(float p_deltaTime)
+void Camera::Update(float p_deltaTime, int p_index)
 {
 	m_moveSpeed = p_deltaTime * 0.75f;
-	UpdateKeyboard();
-	UpdateMouse();
+
+	m_instance[p_index]->UpdateKeyboard();
+	m_instance[p_index]->UpdateMouse();
+	m_instance[p_index]->UpdateViewMatrix();
 }
 void Camera::UpdateKeyboard()
 {

@@ -9,7 +9,7 @@ public:
 	static Camera* GetInstance(int p_index);
 
 	void Initialize();
-	void Update(float p_deltaTime);
+	void Update(float p_deltaTime, int p_index);
 	void Shutdown(int p_index);
 	DirectX::XMFLOAT4 GetCameraPos();
 

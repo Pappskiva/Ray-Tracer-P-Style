@@ -9,7 +9,9 @@ const int PRIMITIVE_INDICATOR_NONE = 0;
 const int PRIMITIVE_INDICATOR_SPHERE = 1;
 const int PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
-const int LIGHT_COUNT = 3;
+const int NUMBER_OF_LIGHTS = 3;
+const int MAX_NUMBER_OF_RAY_BOUNCES = 3;
+
 struct Material
 {
 	float3 ambient;
@@ -50,29 +52,30 @@ struct PointLightStruct
 	float4 position;
 	float4 color;
 };
-cbuffer everyFrame : register(b0)
+cbuffer everyFrame : register(c0)
 {
 	float4 cameraPosition;
 	float4x4 inverseProjection;
 	float4x4 inverseView;
 }
-cbuffer PrimitiveBuffer : register(b1)
+cbuffer PrimitiveBuffer : register(c1)
 {
 	Sphere sphere[3];
 }
-cbuffer LightBuffer : register(b2)
+cbuffer LightBuffer : register(c2)
 {
 	PointLightStruct pointLight[3];
 }
-cbuffer perDispatch : register(b3)
+cbuffer perDispatch : register(c3)
 {
 	float screenWidth;
 	float screenHeight;
 	int x_dispatchCound;
 	int y_dispatchCound;
 };
+//RWStructuredBuffer<float>				temp								: register(u1);
+
 RWTexture2D<float4>						output								: register(u0);
-RWStructuredBuffer<float>				temp								: register(u1);
 
 StructuredBuffer<float4>				AllVertex							: register(t0);
 StructuredBuffer<TriangleDescription>	AllTriangleDesc						: register(t1);
@@ -80,7 +83,7 @@ StructuredBuffer<float3>				ALLNormal							: register(t2);
 StructuredBuffer<float2>				AllTexCoord							: register(t3);
 Texture2D								BoxTexture							: register(t4);
 
-SamplerState							MeshTexture							: register(s0);
+SamplerState							MeshTextureSampler					: register(s0);
 //Forward Declare
 Ray CreateRay(uint p_x, uint p_y);
 float RaySphereIntersectionTest(in Ray p_ray, in uint p_index);
@@ -88,7 +91,12 @@ float RayTriangleIntersectionTest(in Ray p_ray, in uint p_index);
 Ray RayJump(inout Ray p_ray,out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType);
 void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p_amount, out uint p_hitPrimitive, out uint p_closestPrimitiveIndex, out float p_distanceToClosestPrimitive, in float p_smallestDistance);
 float4 ShadeCalculation(in Ray p_ray, in uint p_primitiveIndex, in uint p_primitiveType, in float4 p_collideNormal, in Material p_material);
-
+float4 GetPrimitiveColor(in uint p_primitiveIndex, in uint p_primitiveType, in float3 p_intersectPos);
+float4 GetTriangleTexture(in uint p_primitiveIndex, in float3 p_intersectPos);
+float2 GetTriangleTextureCoordinates(in uint p_primitiveIndex, in float3 p_intersectPos);
+float GetTriangleArea(float3 p_point0, float3 p_point1, float3 p_point2);
+float4 CalculateLight(Material p_material, float4 p_hitPosition, float4 p_surfaceNormal, PointLightStruct p_lightData);
+float4 CalculatPhongLighting(Material M, float4 L, float4 N, float4 R, float4 V);
 
 Ray CreateRay(uint p_x, uint p_y)
 {
@@ -118,14 +126,43 @@ float4 TraceRay(Ray p_ray)
 	Material material;
 	uint primitiveIndex;
 	uint primitiveType;
-
 	nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
+
+
+
+	float4 temp = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
 
 	if (primitiveType != PRIMITIVE_INDICATOR_NONE)
 	{
-
+		temp = ShadeCalculation(nextRay, primitiveIndex, primitiveType, collideNormal, material);
 	}
+	returnColor += temp;
+	//if (temp.x == 0.0f && temp.y == 0.0f && temp.z == 0.0f && temp.w == 0.0f)
+	//{
+	//	returnColor = temp;
+	//}
+	//else
+	//{
+	//}
 
+	uint isReflective;
+	float reflectiveFactor = 1.0f;
+
+	//for (uint i = 0; i < MAX_NUMBER_OF_RAY_BOUNCES; i++)
+	//{
+	//	////
+	//	//if ()
+	//	//{
+
+	//	//}
+	//	//else
+	//	//{
+	//	//	break;
+	//	//}
+	//}
+
+	return returnColor;
 	/*
 	float sphereRadius = 0.5f;
 	Ray ray;
@@ -160,8 +197,6 @@ float4 TraceRay(Ray p_ray)
 	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); }
 	else{ return returnColor; }
 	*/
-
-	return returnColor;
 
 	//float vtc = 0.0f;
 	//
@@ -366,11 +401,111 @@ float4 ShadeCalculation(in Ray p_ray, in uint p_primitiveIndex, in uint p_primit
 {
 	float4 illumination = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
+	for (unsigned int i = 0; i < NUMBER_OF_LIGHTS; i++)
 	{
+		bool isLitByLight = false;/////////////////////////////////Is lit by light function
+		if (isLitByLight == true)
+		{
+			illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
 
+		}
 	}
+	illumination += float4(p_material.ambient, 1.0f);
+	illumination *= GetPrimitiveColor(p_primitiveIndex, p_primitiveType, p_ray.m_origin.xyz);
+	return illumination;
 }
+float4 CalculateLight(Material p_material, float4 p_hitPosition, float4 p_surfaceNormal, PointLightStruct p_lightData)
+{
+	float4 L = p_lightData.position - p_hitPosition;
+	float d = length(L);
+
+	float r = 5000.0f;
+	float a = 1.0f/(r * r);
+	float b = 2.0f / r;
+	float c = 1.0f;
+
+	float lightAttenuation = 1 / (a*d*d + b*d + c);
+	L = normalize(L);
+
+	float4 N = normalize(p_surfaceNormal);
+	float4 R = normalize(2 * saturate(dot(L, N)) * N - L);
+	float4 V = normalize(cameraPosition - p_hitPosition);
+
+	return lightAttenuation * CalculatPhongLighting(p_material, L, N, R, V);
+}
+float4 CalculatPhongLighting(Material M, float4 L, float4 N, float4 R, float4 V)
+{
+	float4 specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 diffuse = saturate(dot(L, N));
+	if (diffuse.x > 0.0f)
+	{
+		specular = float4(M.specular, 1.0f) * pow(saturate(dot(R, V)), M.shininess);
+	}
+	diffuse *= float4(M.diffuse, 1.0f);
+
+	return (diffuse + specular);
+}
+//Get color from texture
+float4 GetPrimitiveColor(in uint p_primitiveIndex, in uint p_primitiveType, in float3 p_intersectPos)
+{
+	if (p_primitiveType == PRIMITIVE_INDICATOR_SPHERE)
+	{
+		return float4(sphere[p_primitiveIndex].m_color, 0.0f);
+	}
+	else if (p_primitiveType == PRIMITIVE_INDICATOR_TRIANGLE)
+	{
+		float4 colorToAdd = float4(1.0f, 1.0f, 1.0f, 1.0f);
+		return GetTriangleTexture(p_primitiveIndex, p_intersectPos) * colorToAdd;
+	}
+	return float4(0.0f,0.0f,0.0f,0.0f);//Return black 
+}
+float4 GetTriangleTexture(in uint p_primitiveIndex, in float3 p_intersectPos)
+{
+	float2 uv = GetTriangleTextureCoordinates(p_primitiveIndex, p_intersectPos);
+
+	return BoxTexture.SampleLevel(MeshTextureSampler, uv, 0);
+}
+float2 GetTriangleTextureCoordinates(in uint p_primitiveIndex, in float3 p_intersectPos)
+{
+	TriangleDescription triangleDescription = AllTriangleDesc[p_primitiveIndex];
+	float totalArea = GetTriangleArea(AllVertex[triangleDescription.point0].xyz, AllVertex[triangleDescription.point1].xyz, AllVertex[triangleDescription.point2].xyz);
+
+	float area0, area1, area2;
+	area0 = GetTriangleArea(AllVertex[triangleDescription.point1].xyz, AllVertex[triangleDescription.point2].xyz, p_intersectPos);
+	area1 = GetTriangleArea(AllVertex[triangleDescription.point0].xyz, AllVertex[triangleDescription.point2].xyz, p_intersectPos);
+	area2 = GetTriangleArea(AllVertex[triangleDescription.point0].xyz, AllVertex[triangleDescription.point1].xyz, p_intersectPos);
+
+	float b0, b1, b2;
+	b0 = area0 / totalArea;
+	b1 = area1 / totalArea;
+	b2 = area2 / totalArea;
+
+	float2 texcoord0 = AllTexCoord[triangleDescription.TexCoordIndex0];
+	float2 texcoord1 = AllTexCoord[triangleDescription.TexCoordIndex1];
+	float2 texcoord2 = AllTexCoord[triangleDescription.TexCoordIndex2];
+
+	return b0 * texcoord0 + b1 * texcoord1 + b2 * texcoord2 * triangleDescription.padding;/////////////////////////////////////////////////////////PADDING????????TODO
+
+}
+float GetTriangleArea(float3 p_point0, float3 p_point1, float3 p_point2)
+{
+	float border0, border1, border2;
+	border0 = length(p_point0 - p_point1);
+	border1 = length(p_point0 - p_point2);
+	border2 = length(p_point1 - p_point2);
+	
+	float temp1, temp2;
+	if ((temp1 = border0) == (temp2 = border1) || (temp1 = border0) == (temp2 = border2) || (temp1 = border1) == (temp2 = border2))
+	{
+		return temp1 * temp2 / 2;
+	}
+
+	float s = 0.5f * (border0 + border1 + border2);
+	float area = sqrt(s * (s - border0) * (s - border1) * (s - border2));
+	return area;
+}
+
+
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID )
 {
@@ -383,8 +518,8 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	ray = CreateRay(coord.x, coord.y);
 	//////////////////////////////////////////////////Primary Ray Stage
 	//////////////////////////////////////////////////Interaction Stage
-	float4 finalColor = TraceRay(ray);
-
+	float4 finalColor;
+	finalColor = TraceRay(ray);
 	//////////////////////////////////////////////////Interaction Stage
 	//////////////////////////////////////////////////Color Stage
 	//float a;

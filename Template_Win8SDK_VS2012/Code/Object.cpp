@@ -87,7 +87,7 @@ void Object::LoadObject(char* p_objPath,
 		sscanf_s(buffer, "%s ", key, sizeof(key));
 		if (key[0] == 'v' && key[1] == 'n')
 		{
-			sscanf_s(buffer, "vn %f %f %f", normalX, normalY, normalZ);
+			sscanf_s(buffer, "vn %f %f %f", &normalX, &normalY, &normalZ);
 			XMFLOAT3 vNorm;
 			vNorm.x = normalX;
 			vNorm.y = normalY;

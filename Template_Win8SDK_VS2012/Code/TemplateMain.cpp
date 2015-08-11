@@ -270,7 +270,7 @@ void UpdateLightBuffer()
 }
 void LoadObjectData()
 {
-	LoadMesh("..\\Objects\\ROOM.obj");
+	LoadMesh("ROOM.obj");
 
 }
 void LoadMesh(char* p_path)
@@ -460,11 +460,6 @@ void CreateObjectBuffer()
 		return;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
-	delete objectNormalBuffer;
-	delete vertexBuffer;
-	delete texCoordBuffer;
-	delete triangleBuffer;
-
 }
 ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
 {
@@ -491,10 +486,8 @@ ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
 }
 HRESULT Update(float deltaTime)
 {
-	Camera::GetInstance(m_cameraIndex)->Update(deltaTime);
 
-
-
+	Camera::GetInstance(m_cameraIndex)->Update(deltaTime, m_cameraIndex);
 	UpdateEveryFrameBuffer();
 	UpdateLightBuffer();
 	return S_OK;
