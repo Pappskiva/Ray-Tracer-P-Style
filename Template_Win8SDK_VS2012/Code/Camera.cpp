@@ -15,8 +15,8 @@ Camera* Camera::GetInstance(int p_index)
 }
 void Camera::Initialize()
 {
-	m_cameraPosition = DirectX::XMFLOAT4(-1992.0f, -1764.0f, -1992.0f, 1.0f);
-	//m_cameraPosition = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	//m_cameraPosition = DirectX::XMFLOAT4(-1992.0f, -1764.0f, -1992.0f, 1.0f);
+	m_cameraPosition = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	m_right = DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	m_up = DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	m_look = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);

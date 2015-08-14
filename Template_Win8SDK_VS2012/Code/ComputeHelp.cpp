@@ -358,8 +358,7 @@ ComputeTexture* ComputeWrap::CreateTexture(TCHAR* textureFilename, char* debugNa
 	*/
 }
 
-ID3D11Texture2D* ComputeWrap::CreateTextureResource(DXGI_FORMAT dxFormat,
-	UINT uWidth, UINT uHeight, UINT uRowPitch, VOID* pInitData)
+ID3D11Texture2D* ComputeWrap::CreateTextureResource(DXGI_FORMAT dxFormat,UINT uWidth, UINT uHeight, UINT uRowPitch, VOID* pInitData)
 {
 	ID3D11Texture2D* pTexture = nullptr;
 

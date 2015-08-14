@@ -134,15 +134,15 @@ float4 TraceRay(Ray p_ray)
 	uint primitiveType;
 	nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
 
-	////if (nextRay.m_origin.x == p_ray.m_origin.x && nextRay.m_origin.y == p_ray.m_origin.y && nextRay.m_origin.z == p_ray.m_origin.z)
-	//if (primitiveType == PRIMITIVE_INDICATOR_NONE)
-	//{
-	//	return BLACK;
-	//}
-	//else
-	//{
-	//	return GREEN;
-	//}
+	//if (nextRay.m_origin.x == p_ray.m_origin.x && nextRay.m_origin.y == p_ray.m_origin.y && nextRay.m_origin.z == p_ray.m_origin.z)
+	if (primitiveType == PRIMITIVE_INDICATOR_NONE)
+	{
+		return BLACK;
+	}
+	else
+	{
+		return GREEN;
+	}
 
 	float4 temp = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
