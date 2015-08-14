@@ -3,14 +3,19 @@
 // Direct3D 11 Shader Model 5.0 Demo
 // Copyright (c) Stefan Petersson, 2012
 //--------------------------------------------------------------------------------------
-const float EPSILON = 0.0001f;
+static const float EPSILON = 0.0001f;
 
-const int PRIMITIVE_INDICATOR_NONE = 0;
-const int PRIMITIVE_INDICATOR_SPHERE = 1;
-const int PRIMITIVE_INDICATOR_TRIANGLE = 2;
+static const uint PRIMITIVE_INDICATOR_NONE = 0;
+static const uint PRIMITIVE_INDICATOR_SPHERE = 1;
+static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
-const int NUMBER_OF_LIGHTS = 3;
-const int MAX_NUMBER_OF_RAY_BOUNCES = 3;
+static const uint NUMBER_OF_LIGHTS = 3;
+static const uint MAX_NUMBER_OF_RAY_BOUNCES = 3;
+static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
+static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
+static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
+static const float4 RED = float4(1.0f, 0.0f, 0.0f, 0.0f);
+static const float4 GREEN = float4(0.0f, 1.0f, 0.0f, 0.0f);
 
 struct Material
 {
@@ -84,6 +89,7 @@ StructuredBuffer<float2>				AllTexCoord							: register(t3);
 Texture2D								BoxTexture							: register(t4);
 
 SamplerState							MeshTextureSampler					: register(s0);
+
 //Forward Declare
 Ray CreateRay(uint p_x, uint p_y);
 float RaySphereIntersectionTest(in Ray p_ray, in uint p_index);
@@ -118,7 +124,7 @@ Ray CreateRay(uint p_x, uint p_y)
 }
 float4 TraceRay(Ray p_ray)
 {
-	float4 returnColor = float4(0.0f, 0.25f, 0.25f, 0.0f);
+	float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	Ray nextRay = p_ray;
 
 	float4 collideNormal;
@@ -128,7 +134,15 @@ float4 TraceRay(Ray p_ray)
 	uint primitiveType;
 	nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
 
-
+	////if (nextRay.m_origin.x == p_ray.m_origin.x && nextRay.m_origin.y == p_ray.m_origin.y && nextRay.m_origin.z == p_ray.m_origin.z)
+	//if (primitiveType == PRIMITIVE_INDICATOR_NONE)
+	//{
+	//	return BLACK;
+	//}
+	//else
+	//{
+	//	return GREEN;
+	//}
 
 	float4 temp = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -269,11 +283,7 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 	{
 		p_out_primitiveType = PRIMITIVE_INDICATOR_NONE;
 	}
-	///////////////////////////////////////////////////////////
-
-
-
-
+	//////////////////////////////////////////////////////////
 	//p_out_material.ambient = float3(0.0f, 0.0f, 0.0f);
 	//p_out_material.shininess = 0.0f;
 	//p_out_material.diffuse = float3(0.0f, 0.0f, 0.0f);
@@ -311,6 +321,13 @@ void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p
 			{
 				p_distanceToClosestPrimitive = temp;
 				p_closestPrimitiveIndex = i;
+				if (p_smallestDistance != -1)
+				{
+					if (p_distanceToClosestPrimitive < p_smallestDistance)
+					{
+						return;
+					}
+				}
 			}
 		}
 	}
@@ -509,6 +526,7 @@ float GetTriangleArea(float3 p_point0, float3 p_point1, float3 p_point2)
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID )
 {
+	float4 endColor = float4(0.0f,0.0f,0.0f,0.0f);
 	int2 coord;
 	coord.x = threadID.x + 400 * x_dispatchCound;
 	coord.y = threadID.y + 400 * y_dispatchCound;
@@ -519,7 +537,21 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	//////////////////////////////////////////////////Primary Ray Stage
 	//////////////////////////////////////////////////Interaction Stage
 	float4 finalColor;
+
+	//uint temp = 0;
+	//uint temp1 = 0;
+	//AllTexCoord.GetDimensions(temp, temp1);
+	//if (temp < 0)
+	//{
+	//	finalColor = float4(1.0f, 0.0f, 0.0f, 0.0f);
+	//}
+	//else
+	//{
+	//	finalColor = float4(0.0f,1.0f,0.0f,0.0f);
+	//}
+
 	finalColor = TraceRay(ray);
+
 	//////////////////////////////////////////////////Interaction Stage
 	//////////////////////////////////////////////////Color Stage
 	//float a;
@@ -529,6 +561,8 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	//finalColor /= a;
 	//int arrayWidth = 1600;
 	//temp[coord.x + coord.y * arrayWidth] = finalColor;
+	//endColor = endColor + finalColor;
+	//output[threadID.xy] = endColor;
 	output[threadID.xy] = finalColor;
 	//////////////////////////////////////////////////Color Stage
 }

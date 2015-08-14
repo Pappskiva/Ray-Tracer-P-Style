@@ -67,6 +67,7 @@ ID3D11ShaderResourceView* m_triangleSRV = nullptr;
 ID3D11ShaderResourceView* m_vertexSRV = nullptr;
 ID3D11ShaderResourceView* m_texCoordSRV = nullptr;
 ID3D11ShaderResourceView* m_smallBoxTexture = nullptr;
+ID3D11SamplerState*			m_sampler = nullptr;
 std::vector<DirectX::XMFLOAT4> m_allTriangleVertex;
 std::vector<TriangleDescription> m_allTriangleIndex;
 std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
@@ -97,6 +98,7 @@ void				CreateObjectBuffer();
 void				CreateLightBuffer();
 void				CreatePrimitiveBuffer();
 void				UpdatePrimitiveBuffer();
+void				SetSampler();
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -240,7 +242,7 @@ void Initialize()
 	}
 	CreatePrimitiveBuffer();
 	UpdatePrimitiveBuffer();
-
+	SetSampler();
 }
 void CreateLightBuffer()
 {
@@ -253,7 +255,7 @@ void CreateLightBuffer()
 	HRESULT hr = g_Device->CreateBuffer(&lightData, NULL, &m_lightBuffer);
 	if (FAILED(hr))
 	{
-
+		int i = 0;
 	}
 }
 void UpdateLightBuffer()
@@ -267,6 +269,9 @@ void UpdateLightBuffer()
 		light.pointLight[i].position = Camera::GetInstance(i)->GetCameraPos();
 		light.pointLight[i].color = DirectX::XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
 	}
+
+	*(LightBuffer*)lightResource.pData = light;
+	g_DeviceContext->Unmap(m_lightBuffer, 0);
 }
 void LoadObjectData()
 {
@@ -484,6 +489,25 @@ ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
 	}
 	
 }
+void SetSampler()
+{
+	D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	HRESULT hr = g_Device->CreateSamplerState(&samplerDesc, &m_sampler);
+	if (FAILED(hr))
+	{
+		int i = 0;
+	}
+	g_DeviceContext->CSSetSamplers(0,1,&m_sampler);
+}
 HRESULT Update(float deltaTime)
 {
 
@@ -629,8 +653,13 @@ HRESULT Render(float deltaTime)
 	sprintf_s(
 		title,
 		sizeof(title),
-		"BTH - DirectCompute DEMO - Dispatch time: %f",
-		g_Timer->GetTime()
+		/*BTH - DirectCompute DEMO - */"Camera Pos: X:%f Y:%f Z:%f Camera Dir: X:%f Y:%f Z:%f",
+		Camera::GetInstance(m_cameraIndex)->GetCameraPos().x,
+		Camera::GetInstance(m_cameraIndex)->GetCameraPos().y,
+		Camera::GetInstance(m_cameraIndex)->GetCameraPos().z,
+		Camera::GetInstance(m_cameraIndex)->GetLookAt().x,
+		Camera::GetInstance(m_cameraIndex)->GetLookAt().y,
+		Camera::GetInstance(m_cameraIndex)->GetLookAt().z
 	);
 	SetWindowTextA(g_hWnd, title);
 

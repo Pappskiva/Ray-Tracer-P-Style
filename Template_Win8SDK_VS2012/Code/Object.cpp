@@ -25,6 +25,7 @@ void Object::LoadObject(char* p_objPath,
 {
 	using namespace std;
 	using namespace DirectX;
+	bool first = true;
 
 	//Vertex worldposition
 	vector<XMFLOAT4>* vertexPosition;
@@ -76,14 +77,25 @@ void Object::LoadObject(char* p_objPath,
 		{
 			sscanf_s(buffer, "v %f %f %f", &x, &y, &z);
 			XMFLOAT4 v;
-			v.x = x;
-			v.y = y;
-			v.z = z;
-			v.w = 1;
+			//if (first)
+			//{
+			//	v.x = 1.0f;
+			//	v.y = 0.0f;
+			//	v.z = 4.0f;
+			//	v.w = 1;
+			//	first = false;
+			//}
+			//else
+			//{
+				v.x = x;
+				v.y = y;
+				v.z = z;
+				v.w = 1;
+			//}
 			vertexPosition->push_back(v);
 		}
 
-		// Vertex Positions
+		// Vertex normals
 		sscanf_s(buffer, "%s ", key, sizeof(key));
 		if (key[0] == 'v' && key[1] == 'n')
 		{
@@ -110,7 +122,7 @@ void Object::LoadObject(char* p_objPath,
 		sscanf_s(buffer, "%s ", key, sizeof(key));
 		if (key[0] == 'f')
 		{
-			sscanf_s(buffer, "f %i/%i/&i %i/%i/&i %i/%i/&i",
+			sscanf_s(buffer, "f %i/%i/%i %i/%i/%i %i/%i/%i",
 				&point_index1, &texCoord_index1, &normal_index1,
 				&point_index2, &texCoord_index2, &normal_index2,
 				&point_index3, &texCoord_index3, &normal_index3);
@@ -128,7 +140,7 @@ void Object::LoadObject(char* p_objPath,
 
 			tri.NormalIndex = static_cast<float>(normal_index1 - 1);
 
-			float ambient = 0.001f;
+			float ambient = 0.5f;
 			float diffuse = 1.0f;
 			float specular = 0.01f;
 
@@ -144,6 +156,24 @@ void Object::LoadObject(char* p_objPath,
 		}
 	}
 	file.close();
+
+	//float lowestValue = 0.0f;
+	//for (unsigned int i = 0; i < vertexPosition.size(); i++)
+	//{
+	//	if (lowestValue < vertexPosition[i]->x)
+	//	{
+	//		lowestValue = vertexPosition[i]->x;
+	//	}
+	//	if (lowestValue < vertexPosition[i]->y)
+	//	{
+	//		lowestValue = vertexPosition[i]->y;
+	//	}
+	//	if (lowestValue < vertexPosition[i]->z)
+	//	{
+	//		lowestValue = vertexPosition[i]->z;
+	//	}
+	//}
+
 	*p_out_vertices = vertexPosition;
 	*p_out_texCoords = textureCoord;
 	*p_out_indices = meshDescription;

@@ -12,6 +12,7 @@ public:
 	void Update(float p_deltaTime, int p_index);
 	void Shutdown(int p_index);
 	DirectX::XMFLOAT4 GetCameraPos();
+	DirectX::XMFLOAT4 GetLookAt();
 
 	void SetLens(float p_fovy, float p_aspect, float p_zNear, float p_zFar);
 	void UpdateViewMatrix();
@@ -24,7 +25,13 @@ private:
 	Camera();
 	~Camera();
 	static std::vector<Camera*> m_instance;
+	void Strafe(float p_distance);
+	void Walk(float p_distance);
+	void UpOrDown(float p_distance);
+	void Pitch(float p_angle);
+	void RotateY(float p_angle);
 
+	
 	void UpdateKeyboard();
 	void UpdateMouse();
 
