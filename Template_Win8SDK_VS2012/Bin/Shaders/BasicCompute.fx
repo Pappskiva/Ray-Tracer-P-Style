@@ -92,9 +92,9 @@ SamplerState							MeshTextureSampler					: register(s0);
 
 //Forward Declare
 Ray CreateRay(uint p_x, uint p_y);
-float RaySphereIntersectionTest(in Ray p_ray, in uint p_index);
+float RaySphereIntersectionTest(in Ray p_ray, in Sphere p_sphere);
 float RayTriangleIntersectionTest(in Ray p_ray, in uint p_index);
-Ray RayJump(inout Ray p_ray,out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType);
+float4 RayJump(inout Ray p_ray,out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType);
 void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p_amount, out uint p_hitPrimitive, out uint p_closestPrimitiveIndex, out float p_distanceToClosestPrimitive, in float p_smallestDistance);
 float4 ShadeCalculation(in Ray p_ray, in uint p_primitiveIndex, in uint p_primitiveType, in float4 p_collideNormal, in Material p_material);
 float4 GetPrimitiveColor(in uint p_primitiveIndex, in uint p_primitiveType, in float3 p_intersectPos);
@@ -109,8 +109,8 @@ Ray CreateRay(uint p_x, uint p_y)
 	Ray ray;
 	ray.m_origin = cameraPosition;
 
-	double normalized_X = ((p_x / screenWidth) - 0.5f) * 2.0f;
-	double normalized_Y = (1 - (p_y / screenHeight) - 0.5f) * 2.0f;
+	double normalized_X = ((p_x / screenWidth) - 0.5) * 2.0;
+	double normalized_Y = (1 - (p_y / screenHeight) - 0.5) * 2.0;
 
 	float4 imagePoint = mul(float4(normalized_X, normalized_Y, 1.0f, 1.0f), inverseProjection);
 		imagePoint /= imagePoint.w;
@@ -132,21 +132,22 @@ float4 TraceRay(Ray p_ray)
 	Material material;
 	uint primitiveIndex;
 	uint primitiveType;
-	nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
-
-	//if (nextRay.m_origin.x == p_ray.m_origin.x && nextRay.m_origin.y == p_ray.m_origin.y && nextRay.m_origin.z == p_ray.m_origin.z)
-	if (primitiveType == PRIMITIVE_INDICATOR_NONE)
-	{
-		return BLACK;
-	}
-	else
-	{
-		return GREEN;
-	}
+	float4 jumpReturn;
+	jumpReturn = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
+//	nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
+	return jumpReturn;
+	//if (sphere[0].m_position > cameraPosition.x)
+	////if (nextRay.m_origin.x == p_ray.m_origin.x && nextRay.m_origin.y == p_ray.m_origin.y && nextRay.m_origin.z == p_ray.m_origin.z)
+	//if (primitiveType == PRIMITIVE_INDICATOR_NONE)
+	//{
+	//	return BLACK;
+	//}
+	//else
+	//{
+	//	return GREEN;
+	//}
 
 	float4 temp = float4(0.0f, 0.0f, 0.0f, 0.0f);
-
-
 	if (primitiveType != PRIMITIVE_INDICATOR_NONE)
 	{
 		temp = ShadeCalculation(nextRay, primitiveIndex, primitiveType, collideNormal, material);
@@ -228,7 +229,7 @@ float4 TraceRay(Ray p_ray)
 	//	return float4(0.0f, 0.0f, 0.0f, 0.0f);
 	//}
 }
-Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType)
+float4 RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType)
 {
 	float4 collidePos;
 
@@ -240,7 +241,6 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 	uint sphereHit, triangleHit;
 
 	uint triangle_amount;
-
 	AllTriangleDesc.GetDimensions(triangle_amount, sphereIndex);
 
 	GetClosestPrimitive(p_ray, true, 3, sphereHit, sphereIndex, distanceToClosestSphere, -1.0f);
@@ -250,7 +250,8 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 	if (distanceToClosestTriangle == 0.0f && distanceToClosestSphere == 0.0f)
 	{
 		p_out_primitiveType = PRIMITIVE_INDICATOR_NONE;
-		return p_ray;
+		return BLUE;
+		//return p_ray;
 	}
 
 	const float VERY_SMAL_PADDING_NUMBER = 0.0001f;
@@ -278,6 +279,8 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 
 		p_ray.m_origin = collidePos;
 		p_ray.m_direction = float4(reflect(p_ray.m_direction.xyz, -p_out_collideNormal.xyz), 0.0f);
+
+		return GREEN;
 	}
 	else
 	{
@@ -294,10 +297,12 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 	//p_out_primitiveIndex = 0;
 	//p_out_primitiveType = 0;
 
-	return p_ray;
+//	return p_ray;
+	return RED;
 
 }
-void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p_amount, out uint p_hitPrimitive, out uint p_closestPrimitiveIndex, out float p_distanceToClosestPrimitive, in float p_smallestDistance)
+void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p_amount, out uint p_hitPrimitive, 
+	out uint p_closestPrimitiveIndex, out float p_distanceToClosestPrimitive, in float p_smallestDistance)
 {
 	p_hitPrimitive = -1;
 	float temp = 0.0f;
@@ -307,7 +312,7 @@ void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p
 	{
 		if (p_isSphereIntersection == true)
 		{
-			temp = RaySphereIntersectionTest(p_ray, i);
+			temp = RaySphereIntersectionTest(p_ray, sphere[i]);
 		}
 		else
 		{
@@ -334,14 +339,20 @@ void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p
 
 }
 //Intersection Tests
-float RaySphereIntersectionTest(in Ray p_ray, in uint p_index)
+float RaySphereIntersectionTest(in Ray p_ray, in Sphere p_sphere)
 {
-	float4 distance = p_ray.m_origin - sphere[p_index].m_position;
+	if (true)
+	{
+		return 0.0f;
+
+	}
+	float4 distance = p_ray.m_origin - p_sphere.m_position;
 	float a, b, t, t1, t2;
 
 	b = dot(p_ray.m_direction, distance);
-	a = dot(distance, distance) - (sphere[p_index].m_radius * sphere[p_index].m_radius);
-	if (b*b - a >= 0)
+	a = dot(distance, distance) - (p_sphere.m_radius * p_sphere.m_radius);
+	float temp = b*b - a;
+	if (temp >= 0)
 	{
 		t = sqrt(b*b - a);
 		t1 = -b + t;
@@ -534,6 +545,7 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	//////////////////////////////////////////////////Primary Ray Stage
 	Ray ray;
 	ray = CreateRay(coord.x, coord.y);
+
 	//////////////////////////////////////////////////Primary Ray Stage
 	//////////////////////////////////////////////////Interaction Stage
 	float4 finalColor;
@@ -549,6 +561,7 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	//{
 	//	finalColor = float4(0.0f,1.0f,0.0f,0.0f);
 	//}
+
 
 	finalColor = TraceRay(ray);
 

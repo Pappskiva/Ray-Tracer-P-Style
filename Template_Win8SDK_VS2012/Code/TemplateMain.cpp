@@ -62,6 +62,7 @@ ID3D11Buffer*			m_everyFrameBuffer = nullptr;
 ID3D11Buffer*			m_dispatchBuffer = nullptr;
 ID3D11Buffer*			m_lightBuffer = nullptr;
 ID3D11Buffer*			m_primitiveBuffer = nullptr;
+//ComputeBuffer*			m_sphereBuffer = nullptr;
 ComputeBuffer*			m_vertexBuffer = nullptr;
 ComputeBuffer*			m_triangleBuffer = nullptr;
 ComputeBuffer*			m_texCoordBuffer = nullptr;
@@ -228,8 +229,36 @@ void Initialize()
 	ByteWidth = sizeof(EveryFrameStruct);
 	m_everyFrameBuffer = CreateDynamicConstantBuffer(ByteWidth);
 
-	ByteWidth = sizeof(Primitive);
-	m_primitiveBuffer = CreateDynamicConstantBuffer(ByteWidth);
+	//ByteWidth = sizeof(Primitive);
+	//m_primitiveBuffer = CreateDynamicConstantBuffer(ByteWidth);
+	Primitive prim;
+	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 10.0f, 1.0f);
+	prim.Sphere[0].radius = 5.0f;
+	prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	prim.Sphere[1].center = DirectX::XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
+	prim.Sphere[1].radius = 5.0f;
+	prim.Sphere[1].color = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
+	prim.Sphere[2].radius = 200.0f;
+	prim.Sphere[2].color = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+
+	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
+	{
+		float ambient = 0.5f;
+		float diffuse = 0.7f;
+		float specular = 1.0f;
+
+		prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
+		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
+		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
+		prim.Sphere[i].material.shininess = 50.0f;
+		prim.Sphere[i].material.isReflective = 1.0f;
+		prim.Sphere[i].material.reflectiveFactor = 1.0f;
+	}
+	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(prim), &prim, "");
+
 
 	ByteWidth = sizeof(LightBuffer);
 	m_lightBuffer = CreateDynamicConstantBuffer(ByteWidth);
@@ -438,38 +467,38 @@ void UpdateEveryFrameBuffer()
 }
 void UpdatePrimitiveBuffer()
 {
-	D3D11_MAPPED_SUBRESOURCE primitiveResource;
-	g_DeviceContext->Map(m_primitiveBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &primitiveResource);
+	//D3D11_MAPPED_SUBRESOURCE primitiveResource;
+	//g_DeviceContext->Map(m_primitiveBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &primitiveResource);
 
-	Primitive prim;
-	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 500.0f, 700.0f, 1.0f);
-	prim.Sphere[0].radius = 200.0f;
-	prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 0.50f);
+	//Primitive prim;
+	//prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 10.0f, 1.0f);
+	//prim.Sphere[0].radius = 20.0f;
+	//prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
 
-	prim.Sphere[1].center = DirectX::XMFLOAT4(-900.0f, 500.0f, 700.0f, 1.0f);
-	prim.Sphere[1].radius = 200.0f;
-	prim.Sphere[1].color = DirectX::XMFLOAT3(0.50f, 0.0f, 0.0f);
+	//prim.Sphere[1].center = DirectX::XMFLOAT4(-900.0f, 500.0f, 700.0f, 1.0f);
+	//prim.Sphere[1].radius = 200.0f;
+	//prim.Sphere[1].color = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
-	prim.Sphere[2].radius = 200.0f;
-	prim.Sphere[2].color = DirectX::XMFLOAT3(0.0f, 0.50f, 0.0f);
+	//prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
+	//prim.Sphere[2].radius = 200.0f;
+	//prim.Sphere[2].color = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 
-	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
-	{
-		float ambient = 0.5f;
-		float diffuse = 0.7f;
-		float specular = 1.0f;
+	//for (unsigned int i = 0; i < SPHERE_COUNT; i++)
+	//{
+	//	float ambient = 0.5f;
+	//	float diffuse = 0.7f;
+	//	float specular = 1.0f;
 
-		prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
-		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
-		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
-		prim.Sphere[i].material.shininess = 50.0f;
-		prim.Sphere[i].material.isReflective = 1.0f;
-		prim.Sphere[i].material.reflectiveFactor = 1.0f;
-	}
+	//	prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
+	//	prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
+	//	prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
+	//	prim.Sphere[i].material.shininess = 50.0f;
+	//	prim.Sphere[i].material.isReflective = 1.0f;
+	//	prim.Sphere[i].material.reflectiveFactor = 1.0f;
+	//}
 
-	*(Primitive*)primitiveResource.pData = prim;
-	g_DeviceContext->Unmap(m_primitiveBuffer, 0);
+	//*(Primitive*)primitiveResource.pData = prim;
+	//g_DeviceContext->Unmap(m_primitiveBuffer, 0);
 }
 HRESULT Render(float deltaTime)
 {
@@ -481,7 +510,7 @@ HRESULT Render(float deltaTime)
 											 m_texCoordBuffer->GetResourceView(), 
 											 m_smallBoxTexture};
 	
-	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
+	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, 0);
 	g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
 	g_DeviceContext->CSSetShaderResources(0, 5, srvArray);
 
