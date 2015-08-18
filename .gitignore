@@ -227,3 +227,5 @@ Template_Win8SDK_VS2012/Obj/x86/Debug/vc120.pdb
 *.exe
 *.sdf
 *.tlog
+*.suo
+*.sdf
