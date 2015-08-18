@@ -23,7 +23,7 @@ void Camera::Initialize()
 
 	DirectX::XMStoreFloat4x4(&m_projectionMatrix, DirectX::XMMatrixIdentity());
 	DirectX::XMStoreFloat4x4(&m_viewMatrix, DirectX::XMMatrixIdentity());
-	SetLens(3.1415f/4.0f, 1.0f, 1.0f, 10000.0f);
+	SetLens(3.1415f/4.0f, 1.0f, 0.0f, 10000.0f);
 	m_moveSpeed = 0.0f;
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('i'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('j'));

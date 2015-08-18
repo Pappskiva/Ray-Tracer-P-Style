@@ -1,8 +1,10 @@
-﻿Build started 2015-08-16 20:40:54.
+﻿Build started 2015-08-18 10:17:10.
      1>Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\Common /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/" /Fd"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ComputeHelp.cpp
-         ComputeHelp.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\Common /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/" /Fd"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/vc120.pdb" /Gd /TP /analyze- /errorReport:prompt TemplateMain.cpp
+         TemplateMain.cpp
+     1>c:\users\alexander\documents\github\ray-tracer-p-style\template_win8sdk_vs2012\code\ddstextureloader\ddstextureloader.h(24): warning C4005: '_WIN32_WINNT' : macro redefinition
+                 c:\program files (x86)\windows kits\8.1\include\shared\sdkddkver.h(200) : see previous definition of '_WIN32_WINNT'
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.lib" /MACHINE:X86 /SAFESEH "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/Camera.obj"
          "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/ComputeHelp.obj"
@@ -16,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.74
+Time Elapsed 00:00:01.44

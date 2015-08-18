@@ -257,7 +257,7 @@ void Initialize()
 		prim.Sphere[i].material.isReflective = 1.0f;
 		prim.Sphere[i].material.reflectiveFactor = 1.0f;
 	}
-	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(prim), &prim, "");
+	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(Primitive), &prim, "");
 
 
 	ByteWidth = sizeof(LightBuffer);
@@ -373,12 +373,12 @@ ID3D11Buffer* CreateDynamicConstantBuffer(int p_size)
 	HRESULT hr = S_OK;
 	ID3D11Buffer* buffer;
 	D3D11_BUFFER_DESC desc;
-	desc.ByteWidth = p_size;
+	desc.ByteWidth = (UINT)p_size;
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.MiscFlags = 0;
-	desc.StructureByteStride = 0;
+	//desc.StructureByteStride = 0;
 
 	hr = g_Device->CreateBuffer(&desc, NULL, &buffer);
 	if (FAILED(hr))
@@ -440,14 +440,15 @@ void UpdateDispatchBuffer(int p_x, int p_y)
 }
 void UpdateEveryFrameBuffer()
 {
+	using namespace DirectX;
 	HRESULT hr = S_OK;
 
-	DirectX::XMFLOAT4X4 proj, view, invProj, invView;
+	XMFLOAT4X4 proj, view, invProj, invView;
 	proj = Camera::GetInstance(m_cameraIndex)->GetProjectionMatrix();
 	view = Camera::GetInstance(m_cameraIndex)->GetViewMatrix();
 
-	DirectX::XMStoreFloat4x4(&invProj, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&proj)));
-	DirectX::XMStoreFloat4x4(&invView, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&view)));
+	XMStoreFloat4x4(&invProj, XMMatrixInverse(nullptr, XMLoadFloat4x4(&proj)));
+	XMStoreFloat4x4(&invView, XMMatrixInverse(nullptr, XMLoadFloat4x4(&view)));
 
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -503,7 +504,7 @@ void UpdatePrimitiveBuffer()
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_everyFrameBuffer, m_primitiveBuffer, m_lightBuffer , m_dispatchBuffer};
+	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer, m_primitiveBuffer, m_lightBuffer};
 	ID3D11ShaderResourceView* srvArray[] = { m_vertexBuffer->GetResourceView(),
 											 m_triangleBuffer->GetResourceView(), 
 											 m_objectNormalBuffer->GetResourceView(), 

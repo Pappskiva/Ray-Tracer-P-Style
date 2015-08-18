@@ -87,10 +87,13 @@ void Object::LoadObject(char* p_objPath,
 			//}
 			//else
 			//{
-				v.x = x / 1000;
-				v.y = y / 1000;
-				v.z = z / 1000;
-				v.w = 1;
+			v.x = x;
+			v.y = y;
+			v.z = z;
+			v.w = 1;
+			//v.x = x / 1000;
+			//v.y = y / 1000;
+			//v.z = z / 1000;
 			//}
 			vertexPosition->push_back(v);
 		}
