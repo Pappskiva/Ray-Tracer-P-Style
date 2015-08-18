@@ -294,7 +294,7 @@ void UpdateLightBuffer()
 }
 void LoadObjectData()
 {
-	LoadMesh("ROOM.obj");
+	LoadMesh("room2.obj");
 
 }
 void LoadMesh(char* p_path)
