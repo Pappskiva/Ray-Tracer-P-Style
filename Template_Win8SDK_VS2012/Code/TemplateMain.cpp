@@ -294,7 +294,7 @@ void UpdateLightBuffer()
 }
 void LoadObjectData()
 {
-	LoadMesh("room2.obj");
+	LoadMesh("ROOM.obj");
 
 }
 void LoadMesh(char* p_path)
@@ -551,6 +551,8 @@ HRESULT Render(float deltaTime)
 		Camera::GetInstance(m_cameraIndex)->GetLookAt().y,
 		Camera::GetInstance(m_cameraIndex)->GetLookAt().z
 	);
+		//"BTH - DirectCompute raytracing - Dispatch time: %f ",
+		//g_Timer->GetTime());
 	SetWindowTextA(g_hWnd, title);
 
 	return S_OK;
