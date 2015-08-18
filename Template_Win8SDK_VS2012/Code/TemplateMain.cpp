@@ -232,16 +232,16 @@ void Initialize()
 	//ByteWidth = sizeof(Primitive);
 	//m_primitiveBuffer = CreateDynamicConstantBuffer(ByteWidth);
 	Primitive prim;
-	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 10.0f, 1.0f);
-	prim.Sphere[0].radius = 5.0f;
+	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 5.0f, 1.0f);
+	prim.Sphere[0].radius = 2.0f;
 	prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
 
-	prim.Sphere[1].center = DirectX::XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
-	prim.Sphere[1].radius = 5.0f;
+	prim.Sphere[1].center = DirectX::XMFLOAT4(0.0f, 0.0f, -5.0f, 1.0f);
+	prim.Sphere[1].radius = 2.0f;
 	prim.Sphere[1].color = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
-	prim.Sphere[2].radius = 200.0f;
+	prim.Sphere[2].center = DirectX::XMFLOAT4(5.0f, 0.0f, 0.0f, 1.0f);
+	prim.Sphere[2].radius = 2.0f;
 	prim.Sphere[2].color = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)

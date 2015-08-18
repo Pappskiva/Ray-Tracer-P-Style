@@ -110,30 +110,40 @@ float4 RaySingleSpherCalculation(in Ray p_ray)
 {
 	Sphere sphere;
 	sphere.m_position = float4(0.0f,0.0f,5.0f,0.0f);
-	sphere.m_radius = 3.0f;
+	sphere.m_radius = 2.0f;
 
 	Ray ray = p_ray;
-
-	float4 d = ray.m_origin - sphere.m_position;
-	//float4 d = sphere.m_position - p_ray.m_origin;
-	float l = sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
-	float lTwo = l * l;
-	float rTwo = sphere.m_radius * sphere.m_radius;
-	float lDot = dot(d, ray.m_direction);
-
-	if (lDot >= 0)
+	float temp = RaySphereIntersectionTest(ray, sphere);
+	if (temp == 0.0f)
 	{
-		return WHITE;
-	}
-	else if (lTwo <= rTwo)
-	{
-		return GREEN;
+		return BLACK;
 	}
 	else
 	{
-		return BLUE;
+		return float4(0.0f,0.0f,temp ,1.0f);
 	}
-	
+
+	//float4 d = ray.m_origin - sphere.m_position;
+	////float4 d = sphere.m_position - p_ray.m_origin;
+	//float l = sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+	//float lTwo = l * l;
+	//float rTwo = sphere.m_radius * sphere.m_radius;
+	//float lDot = dot(d, ray.m_direction);
+
+	//if (lDot >= 0)
+	//{
+	//	float m2 = lTwo - (lDot * lDot);
+	//	if (m2 <= rTwo)
+	//	{
+	//		return WHITE;
+	//	}
+	//}
+	//else if (lTwo <= rTwo)
+	//{
+	//	return GREEN;
+	//}	
+	//return BLACK;
+
 	//float4 distance = ray.m_origin -  sphere.m_position;
 	//float a, b, t, t1, t2;
 	//b = dot(ray.m_direction, distance);
@@ -213,14 +223,14 @@ float4 TraceRay(Ray p_ray)
 	//return jumpReturn;
 	//if (sphere[0].m_position > cameraPosition.x)
 	////if (nextRay.m_origin.x == p_ray.m_origin.x && nextRay.m_origin.y == p_ray.m_origin.y && nextRay.m_origin.z == p_ray.m_origin.z)
-	if (primitiveType == PRIMITIVE_INDICATOR_NONE)
-	{
-		return BLACK;
-	}
-	else
-	{
-		return GREEN;
-	}
+	//if (primitiveType == PRIMITIVE_INDICATOR_NONE)
+	//{
+	//	return BLACK;
+	//}
+	//else
+	//{
+	//	return GREEN;
+	//}
 
 	float4 temp = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	if (primitiveType != PRIMITIVE_INDICATOR_NONE)
@@ -253,56 +263,6 @@ float4 TraceRay(Ray p_ray)
 	//}
 
 	return returnColor;
-	/*
-	float sphereRadius = 0.5f;
-	Ray ray;
-	ray.m_origin = p_ray.m_origin;
-	ray.m_direction = p_ray.m_direction;
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 0.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); }
-	else{ return returnColor; }
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 1.0f, 1.0f), sphereRadius, float4(0.0f, 1.0f, 1.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);  }
-	else{ return returnColor; }
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(1.0f, 0.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); }
-	else{ return returnColor; }
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(1.0f, 1.0f, 1.0f), sphereRadius, float4(0.0f, 0.0f, 1.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);  }
-	else{ return returnColor; }
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 0.0f, -1.0f), sphereRadius, float4(1.0f, 1.0f, 0.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f);  }
-	else{ return returnColor; }
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 1.0f, -1.0f), sphereRadius, float4(0.0f, 1.0f, 0.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); }
-	else{ return returnColor; }
-
-	returnColor = RaySphereIntersectionTest(ray.m_origin, ray.m_direction, float3(0.0f, 0.0f, -1.0f), sphereRadius, float4(1.0f, 0.0f, 0.0f, 0.0f));
-	if (returnColor.x == 0.0f || returnColor.y == 0.0f || returnColor.z == 0.0f){ returnColor = float4(1.0f, 1.0f, 1.0f, 1.0f); }
-	else{ return returnColor; }
-	*/
-
-	//float vtc = 0.0f;
-	//
-	//float x = p_rayOrigin.x;
-	//float y = p_rayOrigin.y;
-	//
-	//float value = (x*x) + (y*y);
-	//vtc = sqrt(value);
-	//if (vtc < 1000.0f)
-	//{
-	//	return float4(0.0f, 1.0f, 0.0f, 0.0f);
-	//}
-	//else
-	//{
-	//	return float4(0.0f, 0.0f, 0.0f, 0.0f);
-	//}
 }
 Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType)
 {
@@ -425,7 +385,8 @@ float RaySphereIntersectionTest(in Ray p_ray, in Sphere p_sphere)
 	float temp = b*b - a;
 	if (temp >= 0)
 	{
-		t = sqrt(b*b - a);
+		//return 1.0f;
+		t = sqrt(temp);
 		t1 = -b + t;
 		t2 = -b - t;
 		if (t1 > 0.0f || t2 > 0.0f)
@@ -614,22 +575,8 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	coord.y = threadID.y + 400 * y_dispatchCound;
 	
 	//////////////////////////////////////////////////Primary Ray Stage
-	//Ray ray;
-	//ray = CreateRay(coord.x, coord.y);
-
 	Ray ray;
-	ray.m_origin = cameraPosition;
-
-	double normalized_x = ((coord.x / screenWidth) - 0.5) * 2.0;					// HARDCODED SCREENSIZE
-	double normalized_y = (1 - (coord.y / screenHeight) - 0.5) * 2.0;				// HARDCODED SCREENSIZE
-
-	float4 imagePoint = mul(float4(normalized_x, normalized_y, 1.0f, 1.0f), inverseProjection);
-		imagePoint /= imagePoint.w;
-
-	imagePoint = mul(imagePoint, inverseView);
-
-	ray.m_direction = imagePoint - ray.m_origin;
-	ray.m_direction = normalize(ray.m_direction);
+	ray = CreateRay(coord.x, coord.y);
 
 	//////////////////////////////////////////////////Primary Ray Stage
 	//////////////////////////////////////////////////Interaction Stage
@@ -648,8 +595,8 @@ void main( uint3 threadID : SV_DispatchThreadID )
 		//}
 
 
-	//finalColor = TraceRay(ray);
-	finalColor = RaySingleSpherCalculation(ray);
+	finalColor = TraceRay(ray);
+	//finalColor = RaySingleSpherCalculation(ray);
 
 	//if (x_dispatchCound == 1.0f )
 	//{

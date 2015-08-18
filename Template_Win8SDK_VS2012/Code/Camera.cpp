@@ -23,16 +23,17 @@ void Camera::Initialize()
 
 	DirectX::XMStoreFloat4x4(&m_projectionMatrix, DirectX::XMMatrixIdentity());
 	DirectX::XMStoreFloat4x4(&m_viewMatrix, DirectX::XMMatrixIdentity());
-	SetLens(3.1415f/4.0f, 1.0f, 0.0f, 10000.0f);
+	SetLens(3.1415f/6.0f, 1.0f, 1.0f, 10000.0f);
 	m_moveSpeed = 0.0f;
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('i'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('j'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('k'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('l'));
+
 }
 void Camera::Update(float p_deltaTime, int p_index)
 {
-	m_moveSpeed = p_deltaTime * 1.75f;
+	m_moveSpeed = p_deltaTime * 0.75f;
 
 	m_instance[p_index]->UpdateKeyboard();
 	m_instance[p_index]->UpdateMouse();
@@ -74,19 +75,20 @@ void Camera::UpdateKeyboard()
 	//Rotate camera
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('i')))
 	{
-		RotateY(m_moveSpeed);
+		Pitch(-m_moveSpeed);
+
 	}
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('k')))
 	{
-		RotateY(-m_moveSpeed);
+		Pitch(m_moveSpeed);
 	}
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('l')))
 	{
-		Pitch(m_moveSpeed);
+		RotateY(m_moveSpeed);
 	}
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('j')))
 	{
- 		Pitch(-m_moveSpeed);
+		RotateY(-m_moveSpeed);
 	}
 
 }
@@ -145,14 +147,14 @@ void Camera::RotateY(float p_angle)
 }
 void Camera::UpdateMouse()
 {
-	if (InputClass::GetInstance()->IsLeftMousePressed())
-	{
-		m_look.z += m_moveSpeed;
-	}
-	if (InputClass::GetInstance()->IsRightMouseClicked())
-	{
-		m_look.z -= m_moveSpeed;
-	}
+	//if (InputClass::GetInstance()->IsLeftMousePressed())
+	//{
+	//	m_look.z += m_moveSpeed;
+	//}
+	//if (InputClass::GetInstance()->IsRightMouseClicked())
+	//{
+	//	m_look.z -= m_moveSpeed;
+	//}
 }
 void Camera::Shutdown(int p_index)
 {
