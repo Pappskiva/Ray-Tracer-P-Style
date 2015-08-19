@@ -148,6 +148,7 @@ void Camera::Pitch(float p_angle)
 	DirectX::XMMATRIX rotation;
 	rotation = DirectX::XMMatrixRotationX(p_angle);
 
+	DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
 	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_look), rotation));
 }
 void Camera::RotateY(float p_angle)
@@ -155,6 +156,8 @@ void Camera::RotateY(float p_angle)
 	DirectX::XMMATRIX rotation;
 	rotation = DirectX::XMMatrixRotationY(p_angle);
 
+	//DirectX::XMStoreFloat4(&m_right, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_right), rotation));
+	//DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
 	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_look), rotation));
 }
 void Camera::UpdateMouse()

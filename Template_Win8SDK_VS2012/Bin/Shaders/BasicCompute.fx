@@ -11,7 +11,7 @@ static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
 static const uint NUMBER_OF_LIGHTS = 3;
 static const uint NUMBER_OF_SPHERES = 3;
-static const uint MAX_NUMBER_OF_RAY_BOUNCES = 1;
+static const uint MAX_NUMBER_OF_RAY_BOUNCES = 0;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
 static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -629,6 +629,7 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	a = max(a, finalColor.z);
 	a = max(a, 1.0f);
 	finalColor /= a;
-	output[threadID.xy] = finalColor;
+	//output[threadID.xy] = finalColor;
+	output[coord] = finalColor;
 	//////////////////////////////////////////////////Color Stage
 }
