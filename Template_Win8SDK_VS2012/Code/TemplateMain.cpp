@@ -254,8 +254,8 @@ void Initialize()
 		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
 		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
 		prim.Sphere[i].material.shininess = 50.0f;
-		prim.Sphere[i].material.isReflective = 1.0f;
-		prim.Sphere[i].material.reflectiveFactor = 1.0f;
+		prim.Sphere[i].material.isReflective = 0.0f;
+		prim.Sphere[i].material.reflectiveFactor = 0.0f;
 	}
 	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(Primitive), &prim, "");
 
@@ -266,7 +266,7 @@ void Initialize()
 	LoadObjectData();
 	CreateObjectBuffer();
 	//TCHAR* texturePath = (TCHAR*)"Box_Texture.dds";
-	//m_smallBoxTexture = g_ComputeSys->CreateTexture(0, texturePath, "");
+	//m_smallBoxTexture = g_ComputeSys->CreateTexture(DXGI_FORMAT_UNKNOWN, 512, 512, (512 * 4.0f), texturePath, true, "");
 
 	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_Texture.dds", nullptr, &m_smallBoxTexture);
 	if (FAILED(hr))
@@ -524,7 +524,7 @@ HRESULT Render(float deltaTime)
 		{
 			g_ComputeShader->Set();
 			UpdateDispatchBuffer(x, y);
-			g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
+			g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
 
 			g_DeviceContext->Dispatch(25, 25, 1);
 			g_ComputeShader->Unset();

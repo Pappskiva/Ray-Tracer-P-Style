@@ -11,7 +11,7 @@ static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
 static const uint NUMBER_OF_LIGHTS = 3;
 static const uint NUMBER_OF_SPHERES = 3;
-static const uint MAX_NUMBER_OF_RAY_BOUNCES = 3;
+static const uint MAX_NUMBER_OF_RAY_BOUNCES = 1;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
 static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -353,13 +353,6 @@ void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p
 			{
 				p_distanceToClosestPrimitive = temp;
 				p_closestPrimitiveIndex = i;
-				if (p_smallestDistance != -1)
-				{
-					if (p_distanceToClosestPrimitive < p_smallestDistance)
-					{
-						return;
-					}
-				}
 			}
 		}
 	}
@@ -588,11 +581,11 @@ float GetTriangleArea(float3 p_point0, float3 p_point1, float3 p_point2)
 	border1 = length(p_point0 - p_point2);
 	border2 = length(p_point1 - p_point2);
 	
-	float temp1, temp2;
-	if ((temp1 = border0) == (temp2 = border1) || (temp1 = border0) == (temp2 = border2) || (temp1 = border1) == (temp2 = border2))
-	{
-		return temp1 * temp2 / 2;
-	}
+	//float temp1, temp2;
+	//if ((temp1 = border0) == (temp2 = border1) || (temp1 = border0) == (temp2 = border2) || (temp1 = border1) == (temp2 = border2))
+	//{
+	//	return temp1 * temp2 / 2;
+	//}
 
 	float s = 0.5f * (border0 + border1 + border2);
 	float area = sqrt(s * (s - border0) * (s - border1) * (s - border2));
@@ -619,20 +612,16 @@ float GetReflectiveFactor(in uint p_primitiveIndex, in uint p_primitiveType)
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID )
 {
-	float4 endColor = float4(0.0f,0.0f,0.0f,0.0f);
 	int2 coord;
 	coord.x = threadID.x + 400 * x_dispatchCound;
-	coord.y = threadID.y + 400 * y_dispatchCound;
-	
+	coord.y = threadID.y + 400 * y_dispatchCound;	
 	//////////////////////////////////////////////////Primary Ray Stage
 	Ray ray;
 	ray = CreateRay(coord.x, coord.y);
-
 	//////////////////////////////////////////////////Primary Ray Stage
 	//////////////////////////////////////////////////Interaction Stage
 	float4 finalColor = BLACK;
 	finalColor = TraceRay(ray);
-
 	//////////////////////////////////////////////////Interaction Stage
 	//////////////////////////////////////////////////Color Stage
 	float a;
@@ -640,7 +629,6 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	a = max(a, finalColor.z);
 	a = max(a, 1.0f);
 	finalColor /= a;
-
 	output[threadID.xy] = finalColor;
 	//////////////////////////////////////////////////Color Stage
 }
