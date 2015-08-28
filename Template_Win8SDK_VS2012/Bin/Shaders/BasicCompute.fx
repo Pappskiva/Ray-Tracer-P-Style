@@ -53,29 +53,29 @@ struct Sphere
 	float m_radius;
 	Material material;
 };
-cbuffer perDispatch : register(b0)
+struct PointLightStruct
+{
+	float4 position;
+	float4 color;
+};
+cbuffer perDispatch		: register(b3)
 {
 	float screenWidth;
 	float screenHeight;
 	int x_dispatchCound;
 	int y_dispatchCound;
 };
-struct PointLightStruct
-{
-	float4 position;
-	float4 color;
-};
-cbuffer everyFrame : register(b1)
+cbuffer everyFrame		: register(b0)
 {
 	float4 cameraPosition;
 	float4x4 inverseProjection;
 	float4x4 inverseView;
 }
-cbuffer PrimitiveBuffer : register(b2)
+cbuffer PrimitiveBuffer : register(b1)
 {
 	Sphere sphere[NUMBER_OF_SPHERES];
 }
-cbuffer LightBuffer : register(b3)
+cbuffer LightBuffer		: register(b2)
 {
 	PointLightStruct pointLight[NUMBER_OF_LIGHTS];
 }

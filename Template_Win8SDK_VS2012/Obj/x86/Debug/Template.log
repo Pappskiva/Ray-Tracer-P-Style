@@ -1,4 +1,4 @@
-﻿Build started 2015-08-27 17:26:29.
+﻿Build started 2015-08-28 19:58:19.
      1>Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\Common /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/" /Fd"C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/vc120.pdb" /Gd /TP /analyze- /errorReport:prompt TemplateMain.cpp
@@ -15,10 +15,9 @@
          "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/InputClass.obj"
          "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/Object.obj"
          "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Obj/x86/Debug/TemplateMain.obj"
-     1>Camera.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
          Template.vcxproj -> C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\../Bin/x86/TemplateD.exe
      1>Done Building Project "C:\Users\Alexander\Documents\GitHub\Ray-Tracer-P-Style\Template_Win8SDK_VS2012\Code\Template.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:01.64
+Time Elapsed 00:00:01.57

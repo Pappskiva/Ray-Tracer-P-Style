@@ -504,7 +504,7 @@ void UpdatePrimitiveBuffer()
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer, m_primitiveBuffer, m_lightBuffer};
+	ID3D11Buffer* bufferArray[] = { m_everyFrameBuffer,  m_primitiveBuffer, m_lightBuffer, m_dispatchBuffer};
 	ID3D11ShaderResourceView* srvArray[] = { m_vertexBuffer->GetResourceView(),
 											 m_triangleBuffer->GetResourceView(), 
 											 m_objectNormalBuffer->GetResourceView(), 
@@ -524,7 +524,7 @@ HRESULT Render(float deltaTime)
 		{
 			g_ComputeShader->Set();
 			UpdateDispatchBuffer(x, y);
-			g_DeviceContext->CSSetConstantBuffers(0, 1, bufferArray);
+			g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
 
 			g_DeviceContext->Dispatch(25, 25, 1);
 			g_ComputeShader->Unset();
