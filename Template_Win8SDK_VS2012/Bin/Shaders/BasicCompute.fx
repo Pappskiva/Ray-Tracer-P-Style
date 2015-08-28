@@ -9,7 +9,7 @@ static const uint PRIMITIVE_INDICATOR_NONE = 0;
 static const uint PRIMITIVE_INDICATOR_SPHERE = 1;
 static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
-static const uint NUMBER_OF_LIGHTS = 3;
+static const uint NUMBER_OF_LIGHTS = 1;
 static const uint NUMBER_OF_SPHERES = 3;
 static const uint MAX_NUMBER_OF_RAY_BOUNCES = 0;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -107,91 +107,6 @@ float4 CalculatPhongLighting(Material M, float4 L, float4 N, float4 R, float4 V)
 bool InLight(in Ray p_ray, in uint p_primitiveIndex, in uint p_primitiveType, in uint p_lightIndex);
 float GetReflective(in uint p_primitiveIndex, in uint p_primitiveType);
 float GetReflectiveFactor(in uint p_primitiveIndex, in uint p_primitiveType);
-
-/*
-float4 RaySingleSpherCalculation(in Ray p_ray);
-float4 RaySingleSpherCalculation(in Ray p_ray)
-{
-	Sphere sphere;
-	sphere.m_position = float4(0.0f,0.0f,5.0f,0.0f);
-	sphere.m_radius = 2.0f;
-
-	Ray ray = p_ray;
-	float temp = RaySphereIntersectionTest(ray, sphere);
-	if (temp == 0.0f)
-	{
-		return BLACK;
-	}
-	else
-	{
-		return float4(0.0f,0.0f,temp ,1.0f);
-	}
-
-	//float4 d = ray.m_origin - sphere.m_position;
-	////float4 d = sphere.m_position - p_ray.m_origin;
-	//float l = sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
-	//float lTwo = l * l;
-	//float rTwo = sphere.m_radius * sphere.m_radius;
-	//float lDot = dot(d, ray.m_direction);
-
-	//if (lDot >= 0)
-	//{
-	//	float m2 = lTwo - (lDot * lDot);
-	//	if (m2 <= rTwo)
-	//	{
-	//		return WHITE;
-	//	}
-	//}
-	//else if (lTwo <= rTwo)
-	//{
-	//	return GREEN;
-	//}	
-	//return BLACK;
-
-	//float4 distance = ray.m_origin -  sphere.m_position;
-	//float a, b, t, t1, t2;
-	//b = dot(ray.m_direction, distance);
-	//a = dot(distance, distance) - (sphere.m_radius * sphere.m_radius);
-	//float temp = b*b - a;
-	//if (temp >= 0)
-	//{
-	//	return RED;
-	//	t = sqrt(b*b - a);
-	//	t1 = -b + t;
-	//	t2 = -b - t;
-	//	if (t1 > 0.0f || t2 > 0.0f)
-	//	{
-	//		if (t1 < t2 && t1 > 0)
-	//		{
-	//			return GREEN;
-	//		}
-	//		else if (t2 > 0)
-	//		{
-	//			return BLUE;
-	//		}
-	//	}
-	//}
-	//else
-	//{
-	//	return BLACK; // if didn't hit
-	//}
-	
-
-	//Vec length = s.c - r.o;
-	//float powLength = powf(length.Length(), 2.0f);
-	//float powRad = powf(s.r, 2.0f);
-
-	//float s2 = length.Dot(r.d);
-	//if (s2 >= 0 || powLength <= powRad)
-	//{
-	//	float m2 = powLength - powf(s2, 2.0f);
-	//	if (m2 <= powRad)
-	//	{
-	//		return true;
-	//	}
-	//}
-}
-*/
 
 Ray CreateRay(uint p_x, uint p_y)
 {
@@ -406,7 +321,7 @@ float RayTriangleIntersectionTest(in Ray p_ray, in uint p_index)
 
 	float3 p = cross(p_ray.m_direction.xyz, e2);
 
-		det = dot(e1, p);
+	det = dot(e1, p);
 
 	if (det > -EPSILON && det < EPSILON)
 	{
@@ -417,7 +332,7 @@ float RayTriangleIntersectionTest(in Ray p_ray, in uint p_index)
 
 	float3 T = p_ray.m_origin.xyz - AllVertex[Point0].xyz;
 
-		u = dot(T, p)*inv_det;
+	u = dot(T, p)*inv_det;
 
 	if (u < 0.0f || u > 1.0f)
 	{
@@ -426,7 +341,7 @@ float RayTriangleIntersectionTest(in Ray p_ray, in uint p_index)
 
 	float3 Q = cross(T, e1);
 
-		v = dot(p_ray.m_direction.xyz, Q) * inv_det;
+	v = dot(p_ray.m_direction.xyz, Q) * inv_det;
 
 	if (v < 0.0f || u + v > 1.0f)
 	{
@@ -480,24 +395,36 @@ bool InLight(in Ray p_ray, in uint p_primitiveIndex, in uint p_primitiveType, in
 		{
 			if (distanceToClosestTriangle < distanceToClosestSphere)
 			{
-				return true;
+				if (p_primitiveIndex == closestTriangleIndex)
+				{
+					return true;
+				}
 			}
 		}
 		else if (p_primitiveType == PRIMITIVE_INDICATOR_SPHERE)
 		{
 			if (distanceToClosestTriangle > distanceToClosestSphere)
 			{
-				return true;
+				if (p_primitiveIndex == closestSphereIndex)
+				{
+					return true;
+				}
 			}
 		}
 	}
 	else if (sphereHit != -1 && triangleHit == -1)
 	{
-		return true;
+		if (p_primitiveIndex == closestSphereIndex)
+		{
+			return true;
+		}
 	}
 	else if (sphereHit == -1 && triangleHit != -1)
 	{
-		return true;
+		if (p_primitiveIndex == closestTriangleIndex)
+		{
+			return true;
+		}
 	}
 
 	return false;
@@ -613,8 +540,8 @@ float GetReflectiveFactor(in uint p_primitiveIndex, in uint p_primitiveType)
 void main( uint3 threadID : SV_DispatchThreadID )
 {
 	int2 coord;
-	coord.x = threadID.x + 400 * x_dispatchCound;
-	coord.y = threadID.y + 400 * y_dispatchCound;	
+	coord.x = threadID.x + screenWidth * 0.5 * x_dispatchCound;
+	coord.y = threadID.y + screenHeight * 0.5 * y_dispatchCound;
 	//////////////////////////////////////////////////Primary Ray Stage
 	Ray ray;
 	ray = CreateRay(coord.x, coord.y);

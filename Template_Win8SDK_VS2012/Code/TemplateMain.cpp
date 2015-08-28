@@ -99,6 +99,7 @@ void				CreateObjectBuffer();
 void				UpdatePrimitiveBuffer();
 void				SetSampler();
 
+
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
 	if(featureLevel == D3D_FEATURE_LEVEL_11_0)
@@ -212,6 +213,7 @@ HRESULT Init()
 void Initialize()
 {
 	Camera::GetInstance(m_cameraIndex)->Initialize();
+
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('q'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('w'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('e'));
@@ -265,10 +267,8 @@ void Initialize()
 
 	LoadObjectData();
 	CreateObjectBuffer();
-	//TCHAR* texturePath = (TCHAR*)"Box_Texture.dds";
-	//m_smallBoxTexture = g_ComputeSys->CreateTexture(DXGI_FORMAT_UNKNOWN, 512, 512, (512 * 4.0f), texturePath, true, "");
 
-	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_Texture.dds", nullptr, &m_smallBoxTexture);
+	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_texture.dds", nullptr, &m_smallBoxTexture);
 	if (FAILED(hr))
 	{
 		int i = 0;
@@ -286,7 +286,7 @@ void UpdateLightBuffer()
 	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
 	{
 		light.pointLight[i].position = Camera::GetInstance(i)->GetCameraPos();
-		light.pointLight[i].color = DirectX::XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
+		light.pointLight[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	*(LightBuffer*)lightResource.pData = light;
@@ -430,8 +430,8 @@ void UpdateDispatchBuffer(int p_x, int p_y)
 		int i = 0;
 	}
 	DispatchBufferStruct cBuffer;
-	cBuffer.screenHeight = 1600.0f;
-	cBuffer.screenWidth = 1600.0f;
+	cBuffer.screenHeight = g_Height;
+	cBuffer.screenWidth = g_Width;
 	cBuffer.x_dispatchCound = p_x;
 	cBuffer.y_dispatchCound = p_y;
 
@@ -518,9 +518,9 @@ HRESULT Render(float deltaTime)
 
 	g_Timer->Start();
 
-	for (unsigned int x = 0; x < 4; x++)
+	for (unsigned int x = 0; x < 2; x++)
 	{
-		for (unsigned int y = 0; y < 4; y++)
+		for (unsigned int y = 0; y < 2; y++)
 		{
 			g_ComputeShader->Set();
 			UpdateDispatchBuffer(x, y);

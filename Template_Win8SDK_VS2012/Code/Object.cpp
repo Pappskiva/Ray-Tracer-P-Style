@@ -143,7 +143,7 @@ void Object::LoadObject(char* p_objPath,
 
 			tri.NormalIndex = static_cast<float>(normal_index1 - 1);
 
-			float ambient = 0.2f;
+			float ambient = 0.5f;
 			float diffuse = 1.0f;
 			float specular = 0.01f;
 

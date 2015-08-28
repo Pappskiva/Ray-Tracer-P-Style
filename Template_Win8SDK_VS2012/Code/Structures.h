@@ -48,7 +48,7 @@ struct TriangleDescription
 
 struct Primitive
 {
-	SphereStruct Sphere[3];
+	SphereStruct Sphere[SPHERE_COUNT];
 };
 
 
@@ -60,5 +60,5 @@ struct PointLightData
 
 struct LightBuffer
 {
-	PointLightData pointLight[3];
+	PointLightData pointLight[LIGHT_COUNT];
 };
