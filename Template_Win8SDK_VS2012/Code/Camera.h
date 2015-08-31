@@ -44,5 +44,6 @@ private:
 	DirectX::XMFLOAT4 m_look;
 
 	float m_moveSpeed;
+	float m_rotateSpeed;
 };
 

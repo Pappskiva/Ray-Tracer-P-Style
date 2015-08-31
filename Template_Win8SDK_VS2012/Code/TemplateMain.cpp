@@ -75,6 +75,8 @@ std::vector<TriangleDescription> m_allTriangleIndex;
 std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
 std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
 int m_cameraIndex = 0;
+int m_numberOfLights = 1;
+int m_numberOfLightBounces = 1;
 
 ///////////////////////////////////////////////////New variables//////////////////////////
 
@@ -98,6 +100,7 @@ void				LoadMesh(char* p_path);
 void				CreateObjectBuffer();
 void				UpdatePrimitiveBuffer();
 void				SetSampler();
+
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -212,6 +215,7 @@ HRESULT Init()
 void Initialize()
 {
 	Camera::GetInstance(m_cameraIndex)->Initialize();
+
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('q'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('w'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('e'));
@@ -232,16 +236,16 @@ void Initialize()
 	//ByteWidth = sizeof(Primitive);
 	//m_primitiveBuffer = CreateDynamicConstantBuffer(ByteWidth);
 	Primitive prim;
-	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 10.0f, 1.0f);
-	prim.Sphere[0].radius = 5.0f;
+	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 250.0f, 1.0f);
+	prim.Sphere[0].radius = 100.0f;
 	prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
 
-	prim.Sphere[1].center = DirectX::XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
-	prim.Sphere[1].radius = 5.0f;
+	prim.Sphere[1].center = DirectX::XMFLOAT4(0.0f, 0.0f, -250.0f, 1.0f);
+	prim.Sphere[1].radius = 100.0f;
 	prim.Sphere[1].color = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
-	prim.Sphere[2].radius = 200.0f;
+	prim.Sphere[2].center = DirectX::XMFLOAT4(250.0f, 0.0f, 0.0f, 1.0f);
+	prim.Sphere[2].radius = 100.0f;
 	prim.Sphere[2].color = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
@@ -254,8 +258,8 @@ void Initialize()
 		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
 		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
 		prim.Sphere[i].material.shininess = 50.0f;
-		prim.Sphere[i].material.isReflective = 1.0f;
-		prim.Sphere[i].material.reflectiveFactor = 1.0f;
+		prim.Sphere[i].material.isReflective = 0.0f;
+		prim.Sphere[i].material.reflectiveFactor = 0.0f;
 	}
 	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(Primitive), &prim, "");
 
@@ -265,10 +269,8 @@ void Initialize()
 
 	LoadObjectData();
 	CreateObjectBuffer();
-	//TCHAR* texturePath = (TCHAR*)"Box_Texture.dds";
-	//m_smallBoxTexture = g_ComputeSys->CreateTexture(0, texturePath, "");
 
-	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_Texture.dds", nullptr, &m_smallBoxTexture);
+	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_texture.dds", nullptr, &m_smallBoxTexture);
 	if (FAILED(hr))
 	{
 		int i = 0;
@@ -286,7 +288,7 @@ void UpdateLightBuffer()
 	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
 	{
 		light.pointLight[i].position = Camera::GetInstance(i)->GetCameraPos();
-		light.pointLight[i].color = DirectX::XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
+		light.pointLight[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	*(LightBuffer*)lightResource.pData = light;
@@ -430,8 +432,8 @@ void UpdateDispatchBuffer(int p_x, int p_y)
 		int i = 0;
 	}
 	DispatchBufferStruct cBuffer;
-	cBuffer.screenHeight = 1600.0f;
-	cBuffer.screenWidth = 1600.0f;
+	cBuffer.screenHeight = g_Height;
+	cBuffer.screenWidth = g_Width;
 	cBuffer.x_dispatchCound = p_x;
 	cBuffer.y_dispatchCound = p_y;
 
@@ -504,7 +506,7 @@ void UpdatePrimitiveBuffer()
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_dispatchBuffer, m_everyFrameBuffer, m_primitiveBuffer, m_lightBuffer};
+	ID3D11Buffer* bufferArray[] = { m_everyFrameBuffer,  m_primitiveBuffer, m_lightBuffer, m_dispatchBuffer};
 	ID3D11ShaderResourceView* srvArray[] = { m_vertexBuffer->GetResourceView(),
 											 m_triangleBuffer->GetResourceView(), 
 											 m_objectNormalBuffer->GetResourceView(), 
@@ -518,9 +520,9 @@ HRESULT Render(float deltaTime)
 
 	g_Timer->Start();
 
-	for (unsigned int x = 0; x < 4; x++)
+	for (unsigned int x = 0; x < 2; x++)
 	{
-		for (unsigned int y = 0; y < 4; y++)
+		for (unsigned int y = 0; y < 2; y++)
 		{
 			g_ComputeShader->Set();
 			UpdateDispatchBuffer(x, y);
@@ -551,6 +553,8 @@ HRESULT Render(float deltaTime)
 		Camera::GetInstance(m_cameraIndex)->GetLookAt().y,
 		Camera::GetInstance(m_cameraIndex)->GetLookAt().z
 	);
+		//"BTH - DirectCompute raytracing - Dispatch time: %f ",
+		//g_Timer->GetTime());
 	SetWindowTextA(g_hWnd, title);
 
 	return S_OK;

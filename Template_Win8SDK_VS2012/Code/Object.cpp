@@ -160,23 +160,6 @@ void Object::LoadObject(char* p_objPath,
 	}
 	file.close();
 
-	//float lowestValue = 0.0f;
-	//for (unsigned int i = 0; i < vertexPosition.size(); i++)
-	//{
-	//	if (lowestValue < vertexPosition[i]->x)
-	//	{
-	//		lowestValue = vertexPosition[i]->x;
-	//	}
-	//	if (lowestValue < vertexPosition[i]->y)
-	//	{
-	//		lowestValue = vertexPosition[i]->y;
-	//	}
-	//	if (lowestValue < vertexPosition[i]->z)
-	//	{
-	//		lowestValue = vertexPosition[i]->z;
-	//	}
-	//}
-
 	*p_out_vertices = vertexPosition;
 	*p_out_texCoords = textureCoord;
 	*p_out_indices = meshDescription;
