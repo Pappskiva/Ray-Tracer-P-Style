@@ -12,7 +12,7 @@ static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
 static const uint NUMBER_OF_LIGHTS = 2;
 static const uint NUMBER_OF_SPHERES = 3;
-static const uint MAX_NUMBER_OF_RAY_BOUNCES = 1;
+static const uint MAX_NUMBER_OF_RAY_BOUNCES = 2;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
 static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -148,7 +148,7 @@ float4 TraceRay(Ray p_ray)
 	uint isReflective;
 	float reflectiveFactor = 1.0f;
 
-	for (uint i = 0; i < MAX_NUMBER_OF_RAY_BOUNCES; i++)
+	for (uint i = 0; i < MAX_NUMBER_OF_RAY_BOUNCES - 1; i++)
 	{
 		isReflective = GetReflective(primitiveIndex, primitiveType);
 		if (isReflective == 1)
@@ -178,8 +178,11 @@ float4 TraceRay(Ray p_ray)
 }
 Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType)
 {
-	float4 collidePos;
 
+	p_out_primitiveIndex = 0;
+	p_out_primitiveType = 0;
+	p_out_collideNormal = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 collidePos;
 	uint sphereIndex = 0;
 	uint triangleIndex = 0;
 	float distanceToClosestSphere = 0.0f;
@@ -199,7 +202,7 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 		return p_ray;
 	}
 
-	const float VERY_SMAL_PADDING_NUMBER = 0.0001f;
+	const float VERY_SMAL_PADDING_NUMBER = 0.001f;
 	//////////////////////////Checks Which primitive is closest
 	if ((sphereHit != -1 && triangleHit != -1 && distanceToClosestSphere < distanceToClosestTriangle) || sphereHit != -1 && triangleHit == -1)
 	{
@@ -540,8 +543,8 @@ float GetReflectiveFactor(in uint p_primitiveIndex, in uint p_primitiveType)
 void main( uint3 threadID : SV_DispatchThreadID )
 {
 	int2 coord;
-	coord.x = threadID.x + screenWidth * 0.5 * x_dispatchCound;
-	coord.y = threadID.y + screenHeight * 0.5 * y_dispatchCound;
+	coord.x = threadID.x + screenWidth /2 * x_dispatchCound;
+	coord.y = threadID.y + screenHeight /2 * y_dispatchCound;
 	//////////////////////////////////////////////////Primary Ray Stage
 	Ray ray;
 	ray = CreateRay(coord.x, coord.y);
@@ -556,7 +559,6 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	a = max(a, finalColor.z);
 	a = max(a, 1.0f);
 	finalColor /= a;
-	//output[threadID.xy] = finalColor;
 	output[coord] = finalColor;
 	//////////////////////////////////////////////////Color Stage
 }

@@ -75,6 +75,8 @@ std::vector<TriangleDescription> m_allTriangleIndex;
 std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
 std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
 int m_cameraIndex = 0;
+int m_numberOfLights = 1;
+int m_numberOfLightBounces = 1;
 
 ///////////////////////////////////////////////////New variables//////////////////////////
 
