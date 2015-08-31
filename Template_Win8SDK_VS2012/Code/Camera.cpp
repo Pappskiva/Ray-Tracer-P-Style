@@ -35,8 +35,8 @@ void Camera::Initialize()
 void Camera::Update(float p_deltaTime, int p_index)
 {
 	m_rotateSpeed = p_deltaTime * 0.75f;
-	m_moveSpeed = p_deltaTime * 1.0f;
-	//m_moveSpeed = p_deltaTime * 450.0f;
+	//m_moveSpeed = p_deltaTime * 1.0f;
+	m_moveSpeed = p_deltaTime * 450.0f;
 
 	m_instance[p_index]->UpdateKeyboard();
 	m_instance[p_index]->UpdateMouse();

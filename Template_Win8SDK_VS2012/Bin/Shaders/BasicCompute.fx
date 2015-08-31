@@ -9,14 +9,15 @@ static const uint PRIMITIVE_INDICATOR_NONE = 0;
 static const uint PRIMITIVE_INDICATOR_SPHERE = 1;
 static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
-static const uint NUMBER_OF_LIGHTS = 1;
+static const uint NUMBER_OF_LIGHTS = 2;
 static const uint NUMBER_OF_SPHERES = 3;
-static const uint MAX_NUMBER_OF_RAY_BOUNCES = 0;
+static const uint MAX_NUMBER_OF_RAY_BOUNCES = 1;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
 static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
 static const float4 RED = float4(1.0f, 0.0f, 0.0f, 0.0f);
 static const float4 GREEN = float4(0.0f, 1.0f, 0.0f, 0.0f);
+#pragma pack_matrix(row_major)
 
 struct Material
 {
@@ -146,35 +147,35 @@ float4 TraceRay(Ray p_ray)
 		returnColor = ShadeCalculation(nextRay, primitiveIndex, primitiveType, collideNormal, material);
 	}
 
-	//uint isReflective;
-	//float reflectiveFactor = 1.0f;
+	uint isReflective;
+	float reflectiveFactor = 1.0f;
 
-	//for (uint i = 0; i < MAX_NUMBER_OF_RAY_BOUNCES; i++)
-	//{
-	//	isReflective = GetReflective(primitiveIndex, primitiveType);
-	//	if (isReflective == 1)
-	//	{
-	//		reflectiveFactor *= GetReflectiveFactor(primitiveIndex, primitiveType);
-	//		if (reflectiveFactor > -EPSILON && reflectiveFactor < EPSILON)
-	//		{
-	//			break;
-	//		}
-	//		nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
+	for (uint i = 0; i < MAX_NUMBER_OF_RAY_BOUNCES; i++)
+	{
+		isReflective = GetReflective(primitiveIndex, primitiveType);
+		if (isReflective == 1)
+		{
+			reflectiveFactor *= GetReflectiveFactor(primitiveIndex, primitiveType);
+			if (reflectiveFactor > -EPSILON && reflectiveFactor < EPSILON)
+			{
+				break;
+			}
+			nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
 
-	//		if (primitiveType != PRIMITIVE_INDICATOR_NONE)
-	//		{
-	//			returnColor += reflectiveFactor * ShadeCalculation(nextRay, primitiveIndex, primitiveType, collideNormal, material);
-	//		}
-	//		else if (primitiveType == PRIMITIVE_INDICATOR_NONE)
-	//		{
-	//			break;
-	//		}
-	//	}
-	//	else
-	//	{
-	//		break;
-	//	}
-	//}
+			if (primitiveType != PRIMITIVE_INDICATOR_NONE)
+			{
+				returnColor += reflectiveFactor * ShadeCalculation(nextRay, primitiveIndex, primitiveType, collideNormal, material);
+			}
+			else if (primitiveType == PRIMITIVE_INDICATOR_NONE)
+			{
+				break;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
 	return returnColor;
 }
 Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_material, out uint p_out_primitiveIndex, out uint p_out_primitiveType)
@@ -190,7 +191,7 @@ Ray RayJump(inout Ray p_ray, out float4 p_out_collideNormal, out Material p_out_
 	uint triangle_amount;
 	AllTriangleDesc.GetDimensions(triangle_amount, sphereIndex);
 
-	GetClosestPrimitive(p_ray, true, 3, sphereHit, sphereIndex, distanceToClosestSphere);
+	GetClosestPrimitive(p_ray, true, NUMBER_OF_SPHERES, sphereHit, sphereIndex, distanceToClosestSphere);
 	GetClosestPrimitive(p_ray, false, triangle_amount, triangleHit, triangleIndex, distanceToClosestTriangle);
 
 	//If there are any hits att all
@@ -287,7 +288,6 @@ float RaySphereIntersectionTest(in Ray p_ray, in Sphere p_sphere)
 	float temp = b*b - a;
 	if (temp >= 0)
 	{
-		//return 1.0f;
 		t = sqrt(temp);
 		t1 = -b + t;
 		t2 = -b - t;
@@ -365,11 +365,11 @@ float4 ShadeCalculation(in Ray p_ray, in uint p_primitiveIndex, in uint p_primit
 
 	for (unsigned int i = 0; i < NUMBER_OF_LIGHTS; i++)
 	{
-		bool isLitByLight = InLight(p_ray, p_primitiveIndex, p_primitiveType, i);
-		if (isLitByLight == true)
-		{
-			illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
-		}
+		//bool isLitByLight = InLight(p_ray, p_primitiveIndex, p_primitiveType, i);
+		//if (isLitByLight == true)
+		//{
+		//	illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
+		//}
 	}
 	illumination += float4(p_material.ambient, 1.0f);
 	illumination *= GetPrimitiveColor(p_primitiveIndex, p_primitiveType, p_ray.m_origin.xyz);
