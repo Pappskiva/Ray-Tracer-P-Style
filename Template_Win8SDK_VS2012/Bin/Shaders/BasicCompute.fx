@@ -3,6 +3,7 @@
 // Direct3D 11 Shader Model 5.0 Demo
 // Copyright (c) Stefan Petersson, 2012
 //--------------------------------------------------------------------------------------
+#pragma pack_matrix(row_major)
 static const float EPSILON = 0.0001f;
 
 static const uint PRIMITIVE_INDICATOR_NONE = 0;
@@ -17,7 +18,6 @@ static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
 static const float4 RED = float4(1.0f, 0.0f, 0.0f, 0.0f);
 static const float4 GREEN = float4(0.0f, 1.0f, 0.0f, 0.0f);
-#pragma pack_matrix(row_major)
 
 struct Material
 {
@@ -80,8 +80,6 @@ cbuffer perDispatch		: register(b3)
 	int x_dispatchCound;
 	int y_dispatchCound;
 };
-//RWStructuredBuffer<float>				temp								: register(u1);
-
 RWTexture2D<float4>						output								: register(u0);
 
 StructuredBuffer<float4>				AllVertex							: register(t0);
@@ -365,11 +363,11 @@ float4 ShadeCalculation(in Ray p_ray, in uint p_primitiveIndex, in uint p_primit
 
 	for (unsigned int i = 0; i < NUMBER_OF_LIGHTS; i++)
 	{
-		//bool isLitByLight = InLight(p_ray, p_primitiveIndex, p_primitiveType, i);
-		//if (isLitByLight == true)
-		//{
-		//	illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
-		//}
+		bool isLitByLight = InLight(p_ray, p_primitiveIndex, p_primitiveType, i);
+		if (isLitByLight == true)
+		{
+			illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
+		}
 	}
 	illumination += float4(p_material.ambient, 1.0f);
 	illumination *= GetPrimitiveColor(p_primitiveIndex, p_primitiveType, p_ray.m_origin.xyz);
