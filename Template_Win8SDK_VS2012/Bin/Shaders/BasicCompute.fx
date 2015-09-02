@@ -11,7 +11,7 @@ static const uint PRIMITIVE_INDICATOR_SPHERE = 1;
 static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
 static const uint NUMBER_OF_LIGHTS = 10;
-static const uint NUMBER_OF_SPHERES = 3;
+static const uint NUMBER_OF_SPHERES = 10;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
 static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -284,6 +284,10 @@ void GetClosestPrimitive(in Ray p_ray, in bool p_isSphereIntersection, in uint p
 //Intersection Tests
 float RaySphereIntersectionTest(in Ray p_ray, in Sphere p_sphere)
 {
+	if (p_sphere.m_radius < 1.0f)
+	{
+		return 0.0f;
+	}
 	float4 distance = p_ray.m_origin - p_sphere.m_position;
 	float a, b, t, t1, t2;
 

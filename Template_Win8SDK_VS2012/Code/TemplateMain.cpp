@@ -38,6 +38,8 @@
 #include "InputClass.h"
 #include "Camera.h"
 #include "Object.h"
+#include <cstdlib>
+#include <time.h>
 
 
 //--------------------------------------------------------------------------------------
@@ -61,7 +63,7 @@ D3D11Timer*				g_Timer					= NULL;
 ID3D11Buffer*			m_everyFrameBuffer = nullptr;
 ID3D11Buffer*			m_dispatchBuffer = nullptr;
 ID3D11Buffer*			m_lightBuffer = nullptr;
-ID3D11Buffer*			m_primitiveBuffer = nullptr;
+ID3D11Buffer*			m_sphereBuffer = nullptr;
 //ComputeBuffer*			m_sphereBuffer = nullptr;
 ComputeBuffer*			m_vertexBuffer = nullptr;
 ComputeBuffer*			m_triangleBuffer = nullptr;
@@ -76,8 +78,11 @@ std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
 std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
 int m_numberOfLights = 1;
 int m_numberOfLightBounces = 2;
+int m_numberOfSpheres = 10;
 PointLightData		m_lights[10];
 LightMovement				m_ligthDir[10];
+SphereBuffer			m_spheres;
+bool			m_sphereMoveUp[10];
 
 ///////////////////////////////////////////////////New variables//////////////////////////
 
@@ -99,9 +104,10 @@ void				UpdateLightBuffer();
 void				LoadObjectData();
 void				LoadMesh(char* p_path);
 void				CreateObjectBuffer();
-void				UpdatePrimitiveBuffer();
+void				UpdateSphereBuffer();
 void				SetSampler();
 void				UpdateLights(float p_deltaTime);
+void				UpdateSpheres(float p_deltaTime);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -237,36 +243,32 @@ void Initialize()
 
 	ByteWidth = sizeof(EveryFrameStruct);
 	m_everyFrameBuffer = CreateDynamicConstantBuffer(ByteWidth);
-
-	//ByteWidth = sizeof(Primitive);
-	//m_primitiveBuffer = CreateDynamicConstantBuffer(ByteWidth);
-	Primitive prim;
-	prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 250.0f, 1.0f);
-	prim.Sphere[0].radius = 100.0f;
-	prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-
-	prim.Sphere[1].center = DirectX::XMFLOAT4(0.0f, 0.0f, -250.0f, 1.0f);
-	prim.Sphere[1].radius = 100.0f;
-	prim.Sphere[1].color = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-
-	prim.Sphere[2].center = DirectX::XMFLOAT4(250.0f, 0.0f, 0.0f, 1.0f);
-	prim.Sphere[2].radius = 100.0f;
-	prim.Sphere[2].color = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-
+	std::srand(time(NULL));
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
 	{
+		m_spheres.Sphere[i].center = DirectX::XMFLOAT4(-1800.0f + (i * 350), -1800.0f + (i * 300), 0.0f, 1.0f);
+		m_spheres.Sphere[i].radius = 100.0f;
+		int rand1 = std::rand() % 101;
+		int rand2 = std::rand() % 101;
+		int rand3 = std::rand() % 101;
+		float r = rand1 / 100.0f;
+		float g = rand2 / 100.0f;
+		float b = rand3 / 100.0f;
+		m_spheres.Sphere[i].color = DirectX::XMFLOAT3(r, g, b);
+
 		float ambient = 0.01f;
 		float diffuse = 0.7f;
 		float specular = 1.0f;
 
-		prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
-		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
-		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
-		prim.Sphere[i].material.shininess = 0.5f;
-		prim.Sphere[i].material.isReflective = 1.0f;
-		prim.Sphere[i].material.reflectiveFactor = 0.5f;
+		m_spheres.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
+		m_spheres.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
+		m_spheres.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
+		m_spheres.Sphere[i].material.shininess = 0.5f;
+		m_spheres.Sphere[i].material.isReflective = 1.0f;
+		m_spheres.Sphere[i].material.reflectiveFactor = 0.5f;
+		m_sphereMoveUp[i] = true;
 	}
-	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(Primitive), &prim, "");
+	m_sphereBuffer = CreateDynamicConstantBuffer(sizeof(SphereBuffer));
 
 	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
 	{
@@ -286,7 +288,7 @@ void Initialize()
 		int i = 0;
 	}
 	UpdateLightBuffer();
-	UpdatePrimitiveBuffer();
+	UpdateSphereBuffer();
 	SetSampler();
 }
 void LoadObjectData()
@@ -411,9 +413,33 @@ HRESULT Update(float deltaTime)
 {
 	Camera::GetInstance()->Update(deltaTime);
 	UpdateEveryFrameBuffer();
+	UpdateSpheres(deltaTime);
 	UpdateLights(deltaTime);
-	UpdateLightBuffer();
 	return S_OK;
+}
+void UpdateSpheres(float p_deltaTime)
+{
+	float sphereMoveSpeed = p_deltaTime * 500.0f;
+	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
+	{
+		if (m_sphereMoveUp[i])
+		{
+			m_spheres.Sphere[i].center.y += sphereMoveSpeed;
+		}
+		else
+		{
+			m_spheres.Sphere[i].center.y -= sphereMoveSpeed;
+		}
+		if (m_spheres.Sphere[i].center.y > 1940.0f)
+		{
+			m_sphereMoveUp[i] = false;
+		}
+		else if (m_spheres.Sphere[i].center.y < -1700.0f)
+		{
+			m_sphereMoveUp[i] = true;
+		}
+	}
+	UpdateSphereBuffer();
 }
 void UpdateLights(float p_deltaTime)
 {
@@ -474,6 +500,7 @@ void UpdateLights(float p_deltaTime)
 			break;
 		}
 	}
+	UpdateLightBuffer();
 }
 void UpdateLightBuffer()
 {
@@ -550,45 +577,30 @@ void UpdateEveryFrameBuffer()
 	*(EveryFrameStruct*)mappedResource.pData = cBuffer;
 	g_DeviceContext->Unmap(m_everyFrameBuffer, 0);
 }
-void UpdatePrimitiveBuffer()
+void UpdateSphereBuffer()
 {
-	//D3D11_MAPPED_SUBRESOURCE primitiveResource;
-	//g_DeviceContext->Map(m_primitiveBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &primitiveResource);
+	D3D11_MAPPED_SUBRESOURCE resource;
+	g_DeviceContext->Map(m_sphereBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
 
-	//Primitive prim;
-	//prim.Sphere[0].center = DirectX::XMFLOAT4(0.0f, 0.0f, 10.0f, 1.0f);
-	//prim.Sphere[0].radius = 20.0f;
-	//prim.Sphere[0].color = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
+	{
+		if (m_numberOfSpheres > i)
+		{
+			m_spheres.Sphere[i].radius = 200.0f;
+		}
+		else
+		{
+			m_spheres.Sphere[i].radius = 0.0f;
+		}
+	}
 
-	//prim.Sphere[1].center = DirectX::XMFLOAT4(-900.0f, 500.0f, 700.0f, 1.0f);
-	//prim.Sphere[1].radius = 200.0f;
-	//prim.Sphere[1].color = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-
-	//prim.Sphere[2].center = DirectX::XMFLOAT4(0.0f, 1000.0f, 0.0f, 1.0f);
-	//prim.Sphere[2].radius = 200.0f;
-	//prim.Sphere[2].color = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-
-	//for (unsigned int i = 0; i < SPHERE_COUNT; i++)
-	//{
-	//	float ambient = 0.5f;
-	//	float diffuse = 0.7f;
-	//	float specular = 1.0f;
-
-	//	prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
-	//	prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
-	//	prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
-	//	prim.Sphere[i].material.shininess = 50.0f;
-	//	prim.Sphere[i].material.isReflective = 1.0f;
-	//	prim.Sphere[i].material.reflectiveFactor = 1.0f;
-	//}
-
-	//*(Primitive*)primitiveResource.pData = prim;
-	//g_DeviceContext->Unmap(m_primitiveBuffer, 0);
+	*(SphereBuffer*)resource.pData = m_spheres;
+	g_DeviceContext->Unmap(m_sphereBuffer, 0);
 }
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
-	ID3D11Buffer* bufferArray[] = { m_everyFrameBuffer,  m_primitiveBuffer, m_lightBuffer, m_dispatchBuffer};
+	ID3D11Buffer* bufferArray[] = { m_everyFrameBuffer, m_sphereBuffer, m_lightBuffer, m_dispatchBuffer };
 	ID3D11ShaderResourceView* srvArray[] = { m_vertexBuffer->GetResourceView(),
 											 m_triangleBuffer->GetResourceView(), 
 											 m_objectNormalBuffer->GetResourceView(), 

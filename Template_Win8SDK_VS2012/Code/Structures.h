@@ -1,7 +1,7 @@
 
 #include <DirectXMath.h>
 #define LIGHT_COUNT 10
-#define SPHERE_COUNT 3
+#define SPHERE_COUNT 10
 
 struct DispatchBufferStruct
 {
@@ -50,7 +50,7 @@ struct TriangleDescription
 	Material material;
 };
 
-struct Primitive
+struct SphereBuffer
 {
 	SphereStruct Sphere[SPHERE_COUNT];
 };
