@@ -233,6 +233,8 @@ void Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('x'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('c'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('v'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('1'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('2'));
 	
 	HRESULT hr = S_OK;
 
@@ -420,6 +422,16 @@ HRESULT Update(float deltaTime)
 void UpdateSpheres(float p_deltaTime)
 {
 	float sphereMoveSpeed = p_deltaTime * 500.0f;
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('1')))
+	{
+		if (m_numberOfSpheres > 0)
+			m_numberOfSpheres--;
+	}
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('2')))
+	{
+		if (m_numberOfSpheres < SPHERE_COUNT)
+			m_numberOfSpheres++;
+	}
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
 	{
 		if (m_sphereMoveUp[i])
