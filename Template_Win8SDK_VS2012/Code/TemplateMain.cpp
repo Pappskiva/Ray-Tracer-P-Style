@@ -74,7 +74,6 @@ std::vector<DirectX::XMFLOAT4> m_allTriangleVertex;
 std::vector<TriangleDescription> m_allTriangleIndex;
 std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
 std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
-int m_cameraIndex = 0;
 int m_numberOfLights = 1;
 int m_numberOfLightBounces = 2;
 PointLightData		m_lights[10];
@@ -216,7 +215,7 @@ HRESULT Init()
 }
 void Initialize()
 {
-	Camera::GetInstance(m_cameraIndex)->Initialize();
+	Camera::GetInstance()->Initialize();
 
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('q'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('w'));
@@ -281,7 +280,7 @@ void Initialize()
 	LoadObjectData();
 	CreateObjectBuffer();
 
-	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"Box_texture.dds", nullptr, &m_smallBoxTexture);
+	hr = DirectX::CreateDDSTextureFromFile(g_Device, L"rockWall.dds", nullptr, &m_smallBoxTexture);
 	if (FAILED(hr))
 	{
 		int i = 0;
@@ -292,7 +291,7 @@ void Initialize()
 }
 void LoadObjectData()
 {
-	LoadMesh("ROOM.obj");
+	LoadMesh("BigCrate.obj");
 
 }
 void LoadMesh(char* p_path)
@@ -410,7 +409,7 @@ void SetSampler()
 }
 HRESULT Update(float deltaTime)
 {
-	Camera::GetInstance(m_cameraIndex)->Update(deltaTime, m_cameraIndex);
+	Camera::GetInstance()->Update(deltaTime);
 	UpdateEveryFrameBuffer();
 	UpdateLights(deltaTime);
 	UpdateLightBuffer();
@@ -525,8 +524,8 @@ void UpdateEveryFrameBuffer()
 	HRESULT hr = S_OK;
 
 	XMFLOAT4X4 proj, view, invProj, invView;
-	proj = Camera::GetInstance(m_cameraIndex)->GetProjectionMatrix();
-	view = Camera::GetInstance(m_cameraIndex)->GetViewMatrix();
+	proj = Camera::GetInstance()->GetProjectionMatrix();
+	view = Camera::GetInstance()->GetViewMatrix();
 
 	XMStoreFloat4x4(&invProj, XMMatrixInverse(nullptr, XMLoadFloat4x4(&proj)));
 	XMStoreFloat4x4(&invView, XMMatrixInverse(nullptr, XMLoadFloat4x4(&view)));
@@ -540,7 +539,7 @@ void UpdateEveryFrameBuffer()
 		int i = 0;
 	}
 	EveryFrameStruct cBuffer;
-	cBuffer.cameraPosition = Camera::GetInstance(m_cameraIndex)->GetCameraPos();
+	cBuffer.cameraPosition = Camera::GetInstance()->GetCameraPos();
 	cBuffer.inverseProjection = invProj;
 	cBuffer.inverseView = invView;
 	cBuffer.Padding0 = 0;
@@ -599,13 +598,11 @@ HRESULT Render(float deltaTime)
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, 0);
 	g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
 	g_DeviceContext->CSSetShaderResources(0, 5, srvArray);
+	UpdateDispatchBuffer(0, 0);
 
 
 	g_Timer->Start();
-
 	g_ComputeShader->Set();
-	UpdateDispatchBuffer(0, 0);
-	//g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
 	g_DeviceContext->Dispatch(25, 25, 1);
 	g_ComputeShader->Unset();
 
@@ -616,35 +613,29 @@ HRESULT Render(float deltaTime)
 	//		g_ComputeShader->Set();
 	//		UpdateDispatchBuffer(x, y);
 	//		g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
-
 	//		g_DeviceContext->Dispatch(25, 25, 1);
 	//		g_ComputeShader->Unset();
 	//	}
 	//}
 	g_Timer->Stop();
 
-
-
-
 	if(FAILED(g_SwapChain->Present( 0, 0 )))
 		return E_FAIL;
-
 
 	char title[256];
 	sprintf_s(
 		title,
 		sizeof(title),
 		/*BTH - DirectCompute DEMO - */"Camera Pos: X:%f Y:%f Z:%f Camera Dir: X:%f Y:%f Z:%f",
-		Camera::GetInstance(m_cameraIndex)->GetCameraPos().x,
-		Camera::GetInstance(m_cameraIndex)->GetCameraPos().y,
-		Camera::GetInstance(m_cameraIndex)->GetCameraPos().z,
-		Camera::GetInstance(m_cameraIndex)->GetLookAt().x,
+		Camera::GetInstance()->GetCameraPos().x,
+		Camera::GetInstance()->GetCameraPos().y,
+		Camera::GetInstance()->GetCameraPos().z,
+		Camera::GetInstance()->GetLookAt().x,
 		(float)m_numberOfLightBounces,
 		(float)m_numberOfLights
-		//Camera::GetInstance(m_cameraIndex)->GetLookAt().z
+		//Camera::GetInstance()->GetLookAt().z
 	);
-		//"BTH - DirectCompute raytracing - Dispatch time: %f ",
-		//g_Timer->GetTime());
+		//"BTH - DirectCompute raytracing - Dispatch time: %f ", g_Timer->GetTime());
 	SetWindowTextA(g_hWnd, title);
 
 	return S_OK;
@@ -653,10 +644,7 @@ void Shutdown()
 {
 	InputClass::GetInstance()->Shutdown();
 	Object::GetObjectLoader()->Shutdown();
-	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
-	{			
-		Camera::GetInstance(i)->Shutdown(i);
-	}
+	Camera::GetInstance()->Shutdown();
 }
 
 //--------------------------------------------------------------------------------------

@@ -6,11 +6,11 @@ class Camera
 public:
 	Camera(const Camera&) = delete;
 	Camera& operator=(const Camera&) = delete;
-	static Camera* GetInstance(int p_index);
+	static Camera* GetInstance();
 
 	void Initialize();
-	void Update(float p_deltaTime, int p_index);
-	void Shutdown(int p_index);
+	void Update(float p_deltaTime);
+	void Shutdown();
 	DirectX::XMFLOAT4 GetCameraPos();
 	DirectX::XMFLOAT4 GetLookAt();
 
@@ -24,7 +24,7 @@ public:
 private:
 	Camera();
 	~Camera();
-	static std::vector<Camera*> m_instance;
+	static Camera* m_instance;
 	void Strafe(float p_distance);
 	void Walk(float p_distance);
 	void UpOrDown(float p_distance);

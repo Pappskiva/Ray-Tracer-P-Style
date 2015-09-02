@@ -1,17 +1,17 @@
 #include "Camera.h"
 #include "InputClass.h"
-std::vector<Camera*> Camera::m_instance = std::vector<Camera*>(10);
+Camera* Camera::m_instance;
 Camera::Camera(){}
 Camera::~Camera(){}
 
-Camera* Camera::GetInstance(int p_index)
+Camera* Camera::GetInstance()
 {
-	if (m_instance.at(p_index) == nullptr)
+	if (m_instance == nullptr)
 	{
-		m_instance.at(p_index) = new Camera;
-		m_instance.at(p_index)->Initialize();
+		m_instance = new Camera;
+		m_instance->Initialize();
 	}
-	return m_instance.at(p_index);
+	return m_instance;
 }
 void Camera::Initialize()
 {
@@ -36,15 +36,15 @@ void Camera::Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_SPACE));
 
 }
-void Camera::Update(float p_deltaTime, int p_index)
+void Camera::Update(float p_deltaTime)
 {
 	m_rotateSpeed = p_deltaTime * 0.75f;
 	//m_moveSpeed = p_deltaTime * 1.0f;
 	m_moveSpeed = p_deltaTime * 450.0f;
 
-	m_instance[p_index]->UpdateKeyboard();
-	m_instance[p_index]->UpdateMouse();
-	m_instance[p_index]->UpdateViewMatrix();
+	m_instance->UpdateKeyboard();
+	m_instance->UpdateMouse();
+	m_instance->UpdateViewMatrix();
 }
 void Camera::UpdateKeyboard()
 {
@@ -178,12 +178,12 @@ void Camera::UpdateMouse()
 	//	m_look.z -= m_moveSpeed;
 	//}
 }
-void Camera::Shutdown(int p_index)
+void Camera::Shutdown()
 {
-	if (m_instance[p_index] != nullptr)
+	if (m_instance != nullptr)
 	{
-		delete m_instance[p_index];
-		m_instance[p_index] = 0;
+		delete m_instance;
+		m_instance = 0;
 	}
 }
 
