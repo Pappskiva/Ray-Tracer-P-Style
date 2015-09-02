@@ -10,9 +10,8 @@ static const uint PRIMITIVE_INDICATOR_NONE = 0;
 static const uint PRIMITIVE_INDICATOR_SPHERE = 1;
 static const uint PRIMITIVE_INDICATOR_TRIANGLE = 2;
 
-static const uint NUMBER_OF_LIGHTS = 2;
+static const uint NUMBER_OF_LIGHTS = 10;
 static const uint NUMBER_OF_SPHERES = 3;
-static const uint MAX_NUMBER_OF_RAY_BOUNCES = 2;
 static const float4 BLACK = float4(0.0f, 0.0f, 0.0f, 0.0f);
 static const float4 WHITE = float4(1.0f, 1.0f, 1.0f, 0.0f);
 static const float4 BLUE = float4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -64,6 +63,10 @@ cbuffer everyFrame		: register(b0)
 	float4 cameraPosition;
 	float4x4 inverseProjection;
 	float4x4 inverseView;
+	int Padding0;
+	int Padding1;
+	int Padding2;
+	uint numberOfBounces;
 }
 cbuffer PrimitiveBuffer : register(b1)
 {
@@ -148,7 +151,7 @@ float4 TraceRay(Ray p_ray)
 	uint isReflective;
 	float reflectiveFactor = 1.0f;
 
-	for (uint i = 0; i < MAX_NUMBER_OF_RAY_BOUNCES - 1; i++)
+	for (uint i = 0; i < numberOfBounces - 1; i++)
 	{
 		isReflective = GetReflective(primitiveIndex, primitiveType);
 		if (isReflective == 1)
@@ -366,10 +369,13 @@ float4 ShadeCalculation(in Ray p_ray, in uint p_primitiveIndex, in uint p_primit
 
 	for (unsigned int i = 0; i < NUMBER_OF_LIGHTS; i++)
 	{
-		bool isLitByLight = InLight(p_ray, p_primitiveIndex, p_primitiveType, i);
-		if (isLitByLight == true)
+		if (pointLight[i].color.x != 0.0f && pointLight[i].color.y != 0.0f && pointLight[i].color.z != 0.0f)
 		{
-			illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
+			bool isLitByLight = InLight(p_ray, p_primitiveIndex, p_primitiveType, i);
+			if (isLitByLight == true)
+			{
+				illumination += CalculateLight(p_material, p_ray.m_origin, p_collideNormal, pointLight[i]) * pointLight[i].color;
+			}
 		}
 	}
 	illumination += float4(p_material.ambient, 1.0f);
@@ -559,6 +565,7 @@ void main( uint3 threadID : SV_DispatchThreadID )
 	a = max(a, finalColor.z);
 	a = max(a, 1.0f);
 	finalColor /= a;
+
 	output[coord] = finalColor;
 	//////////////////////////////////////////////////Color Stage
 }

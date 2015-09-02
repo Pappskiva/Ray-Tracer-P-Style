@@ -1,6 +1,6 @@
 
 #include <DirectXMath.h>
-#define LIGHT_COUNT 3
+#define LIGHT_COUNT 10
 #define SPHERE_COUNT 3
 
 struct DispatchBufferStruct
@@ -15,6 +15,10 @@ struct EveryFrameStruct
 	DirectX::XMFLOAT4 cameraPosition;
 	DirectX::XMFLOAT4X4 inverseProjection;
 	DirectX::XMFLOAT4X4 inverseView;
+	int Padding0;
+	int Padding1;
+	int Padding2;
+	unsigned int Padding3;
 };
 struct Material
 {
@@ -61,4 +65,12 @@ struct PointLightData
 struct LightBuffer
 {
 	PointLightData pointLight[LIGHT_COUNT];
+};
+
+enum LightMovement
+{
+	MoveXPos,
+	MoveXNeg,
+	MoveZPos,
+	MoveZNeg
 };

@@ -143,9 +143,9 @@ void Object::LoadObject(char* p_objPath,
 
 			tri.NormalIndex = static_cast<float>(normal_index1 - 1);
 
-			float ambient = 0.5f;
+			float ambient = 0.01f;
 			float diffuse = 1.0f;
-			float specular = 0.01f;
+			float specular = 0.1f;
 
 			tri.material.ambient = XMFLOAT3(ambient, ambient, ambient);
 			tri.material.diffuse = XMFLOAT3(diffuse, diffuse, diffuse);

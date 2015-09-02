@@ -29,6 +29,10 @@ void Camera::Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('j'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('k'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('l'));
+	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_LEFT));
+	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_RIGHT));
+	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_UP));
+	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_DOWN));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_SPACE));
 
 }
@@ -47,11 +51,11 @@ void Camera::UpdateKeyboard()
 	//Strafe
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('a')))
 	{
-		Strafe(m_moveSpeed);
+		Strafe(-m_moveSpeed);
 	}
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('d')))
 	{
-		Strafe(-m_moveSpeed);
+		Strafe(m_moveSpeed);
 	}
 
 	//Up and down
@@ -160,7 +164,7 @@ void Camera::RotateY(float p_angle)
 	rotation = DirectX::XMMatrixRotationY(p_angle);
 
 	DirectX::XMStoreFloat4(&m_right, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_right), rotation));
-	DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
+	//DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
 	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_look), rotation));
 }
 void Camera::UpdateMouse()

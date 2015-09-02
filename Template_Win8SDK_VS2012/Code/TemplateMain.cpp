@@ -76,7 +76,9 @@ std::vector<DirectX::XMFLOAT2> m_allTriangleTexCoord;
 std::vector<DirectX::XMFLOAT3> m_allTriangleNormal;
 int m_cameraIndex = 0;
 int m_numberOfLights = 1;
-int m_numberOfLightBounces = 1;
+int m_numberOfLightBounces = 2;
+PointLightData		m_lights[10];
+LightMovement				m_ligthDir[10];
 
 ///////////////////////////////////////////////////New variables//////////////////////////
 
@@ -100,7 +102,7 @@ void				LoadMesh(char* p_path);
 void				CreateObjectBuffer();
 void				UpdatePrimitiveBuffer();
 void				SetSampler();
-
+void				UpdateLights(float p_deltaTime);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -222,6 +224,10 @@ void Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('a'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('s'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('d'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('z'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('x'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('c'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('v'));
 	
 	HRESULT hr = S_OK;
 
@@ -250,20 +256,25 @@ void Initialize()
 
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
 	{
-		float ambient = 0.5f;
+		float ambient = 0.01f;
 		float diffuse = 0.7f;
 		float specular = 1.0f;
 
 		prim.Sphere[i].material.ambient = DirectX::XMFLOAT3(ambient, ambient, ambient);
 		prim.Sphere[i].material.diffuse = DirectX::XMFLOAT3(diffuse, diffuse, diffuse);
 		prim.Sphere[i].material.specular = DirectX::XMFLOAT3(specular, specular, specular);
-		prim.Sphere[i].material.shininess = 50.0f;
-		prim.Sphere[i].material.isReflective = 0.0f;
-		prim.Sphere[i].material.reflectiveFactor = 0.0f;
+		prim.Sphere[i].material.shininess = 0.5f;
+		prim.Sphere[i].material.isReflective = 1.0f;
+		prim.Sphere[i].material.reflectiveFactor = 0.5f;
 	}
 	m_primitiveBuffer = g_ComputeSys->CreateConstantBuffer(sizeof(Primitive), &prim, "");
 
-
+	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
+	{
+		m_lights[i].position = DirectX::XMFLOAT4(1900.0f- (i*100),0.0f,1900.0f,1.0f);
+		m_lights[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_ligthDir[i] = MoveXPos;
+	}
 	ByteWidth = sizeof(LightBuffer);
 	m_lightBuffer = CreateDynamicConstantBuffer(ByteWidth);
 
@@ -278,21 +289,6 @@ void Initialize()
 	UpdateLightBuffer();
 	UpdatePrimitiveBuffer();
 	SetSampler();
-}
-void UpdateLightBuffer()
-{
-	D3D11_MAPPED_SUBRESOURCE lightResource;
-	g_DeviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0,&lightResource);
-	LightBuffer light;
-
-	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
-	{
-		light.pointLight[i].position = Camera::GetInstance(i)->GetCameraPos();
-		light.pointLight[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	}
-
-	*(LightBuffer*)lightResource.pData = light;
-	g_DeviceContext->Unmap(m_lightBuffer, 0);
 }
 void LoadObjectData()
 {
@@ -414,11 +410,94 @@ void SetSampler()
 }
 HRESULT Update(float deltaTime)
 {
-
 	Camera::GetInstance(m_cameraIndex)->Update(deltaTime, m_cameraIndex);
 	UpdateEveryFrameBuffer();
+	UpdateLights(deltaTime);
 	UpdateLightBuffer();
 	return S_OK;
+}
+void UpdateLights(float p_deltaTime)
+{
+	float lightMoveSpeed = 500.0f;
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('z')))
+	{
+		if (m_numberOfLights > 0)
+			m_numberOfLights--;
+	}
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('x')))
+	{
+		if (m_numberOfLights < LIGHT_COUNT)
+			m_numberOfLights++;
+	}
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('c')))
+	{
+		if (m_numberOfLights > 0)
+			m_numberOfLightBounces--;
+	}
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('v')))
+	{
+		if (m_numberOfLights < 10)
+			m_numberOfLightBounces++;
+	}
+	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
+	{
+		switch (m_ligthDir[i])
+		{
+		case MoveXPos:
+			m_lights[i].position.x += p_deltaTime * lightMoveSpeed;
+			if (m_lights[i].position.x > 1940.0f)
+			{
+				m_ligthDir[i] = MoveZNeg;
+			}
+			break;
+		case MoveXNeg:
+			m_lights[i].position.x -= p_deltaTime * lightMoveSpeed;
+			if (m_lights[i].position.x < -1940.0f)
+			{
+				m_ligthDir[i] = MoveZPos;
+			}
+			break;
+		case MoveZPos:
+			m_lights[i].position.z += p_deltaTime * lightMoveSpeed;
+			if (m_lights[i].position.z > 1940.0f)
+			{
+				m_ligthDir[i] = MoveXPos;
+			}
+			break;
+		case MoveZNeg:
+			m_lights[i].position.z -= p_deltaTime * lightMoveSpeed;
+			if (m_lights[i].position.z < -1940.0f)
+			{
+				m_ligthDir[i] = MoveXNeg;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+void UpdateLightBuffer()
+{
+	D3D11_MAPPED_SUBRESOURCE lightResource;
+	g_DeviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0,&lightResource);
+	LightBuffer light;
+
+	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
+	{
+		if (i < (unsigned int)m_numberOfLights)
+		{
+			light.pointLight[i].position = m_lights[i].position;
+			light.pointLight[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+		else
+		{
+			light.pointLight[i].position = m_lights[i].position;
+			light.pointLight[i].color = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+		}
+	}
+
+	*(LightBuffer*)lightResource.pData = light;
+	g_DeviceContext->Unmap(m_lightBuffer, 0);
 }
 void UpdateDispatchBuffer(int p_x, int p_y)
 {
@@ -432,8 +511,8 @@ void UpdateDispatchBuffer(int p_x, int p_y)
 		int i = 0;
 	}
 	DispatchBufferStruct cBuffer;
-	cBuffer.screenHeight = g_Height;
-	cBuffer.screenWidth = g_Width;
+	cBuffer.screenHeight = (float)g_Height;
+	cBuffer.screenWidth = (float)g_Width;
 	cBuffer.x_dispatchCound = p_x;
 	cBuffer.y_dispatchCound = p_y;
 
@@ -464,6 +543,10 @@ void UpdateEveryFrameBuffer()
 	cBuffer.cameraPosition = Camera::GetInstance(m_cameraIndex)->GetCameraPos();
 	cBuffer.inverseProjection = invProj;
 	cBuffer.inverseView = invView;
+	cBuffer.Padding0 = 0;
+	cBuffer.Padding1 = 0;
+	cBuffer.Padding2 = 0;
+	cBuffer.Padding3 = m_numberOfLightBounces;
 
 	*(EveryFrameStruct*)mappedResource.pData = cBuffer;
 	g_DeviceContext->Unmap(m_everyFrameBuffer, 0);
@@ -520,18 +603,24 @@ HRESULT Render(float deltaTime)
 
 	g_Timer->Start();
 
-	for (unsigned int x = 0; x < 2; x++)
-	{
-		for (unsigned int y = 0; y < 2; y++)
-		{
-			g_ComputeShader->Set();
-			UpdateDispatchBuffer(x, y);
-			g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
+	g_ComputeShader->Set();
+	UpdateDispatchBuffer(0, 0);
+	//g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
+	g_DeviceContext->Dispatch(25, 25, 1);
+	g_ComputeShader->Unset();
 
-			g_DeviceContext->Dispatch(25, 25, 1);
-			g_ComputeShader->Unset();
-		}
-	}
+	//for (unsigned int x = 0; x < 2; x++)
+	//{
+	//	for (unsigned int y = 0; y < 2; y++)
+	//	{
+	//		g_ComputeShader->Set();
+	//		UpdateDispatchBuffer(x, y);
+	//		g_DeviceContext->CSSetConstantBuffers(0, 4, bufferArray);
+
+	//		g_DeviceContext->Dispatch(25, 25, 1);
+	//		g_ComputeShader->Unset();
+	//	}
+	//}
 	g_Timer->Stop();
 
 
@@ -550,8 +639,9 @@ HRESULT Render(float deltaTime)
 		Camera::GetInstance(m_cameraIndex)->GetCameraPos().y,
 		Camera::GetInstance(m_cameraIndex)->GetCameraPos().z,
 		Camera::GetInstance(m_cameraIndex)->GetLookAt().x,
-		Camera::GetInstance(m_cameraIndex)->GetLookAt().y,
-		Camera::GetInstance(m_cameraIndex)->GetLookAt().z
+		(float)m_numberOfLightBounces,
+		(float)m_numberOfLights
+		//Camera::GetInstance(m_cameraIndex)->GetLookAt().z
 	);
 		//"BTH - DirectCompute raytracing - Dispatch time: %f ",
 		//g_Timer->GetTime());
