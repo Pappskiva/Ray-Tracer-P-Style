@@ -245,7 +245,7 @@ void Initialize()
 
 	ByteWidth = sizeof(EveryFrameStruct);
 	m_everyFrameBuffer = CreateDynamicConstantBuffer(ByteWidth);
-	std::srand(time(NULL));
+	std::srand((unsigned int)time(NULL));
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
 	{
 		m_spheres.Sphere[i].center = DirectX::XMFLOAT4(-1800.0f + (i * 350), -1800.0f + (i * 300), 0.0f, 1.0f);
@@ -274,7 +274,7 @@ void Initialize()
 
 	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
 	{
-		m_lights[i].position = DirectX::XMFLOAT4(1900.0f- (i*100),0.0f,1900.0f,1.0f);
+		m_lights[i].position = DirectX::XMFLOAT4(1900.0f- (i*200),0.0f,1900.0f,1.0f);
 		m_lights[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		m_ligthDir[i] = MoveXPos;
 	}
@@ -596,7 +596,7 @@ void UpdateSphereBuffer()
 
 	for (unsigned int i = 0; i < SPHERE_COUNT; i++)
 	{
-		if (m_numberOfSpheres > i)
+		if ((unsigned int)m_numberOfSpheres > i)
 		{
 			m_spheres.Sphere[i].radius = 200.0f;
 		}
