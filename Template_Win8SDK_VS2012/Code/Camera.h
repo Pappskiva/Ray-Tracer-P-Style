@@ -37,6 +37,7 @@ private:
 	
 	void UpdateKeyboard();
 	void UpdateMouse(HWND p_hwnd);
+	void RotateCamera();
 
 	DirectX::XMFLOAT4 m_cameraPosition;
 	DirectX::XMFLOAT4X4 m_projectionMatrix;
@@ -56,5 +57,6 @@ private:
 	float m_pitch;
 	int m_screenWidth;
 	int m_screenHeight;
+	bool m_rotateUsingMouse;
 };
 

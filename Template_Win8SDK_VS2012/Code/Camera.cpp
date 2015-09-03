@@ -35,18 +35,20 @@ void Camera::Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('j'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('k'));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan('l'));
+	InputClass::GetInstance()->RegisterKey(VkKeyScan('o'));
 	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_LEFT));
 	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_RIGHT));
 	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_UP));
 	//InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_DOWN));
 	InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_SPACE));
+	m_rotateUsingMouse = true;
 
 }
 void Camera::Update(float p_deltaTime, HWND p_hwnd, int p_screenW, int p_scrrenH)
 {
 	m_screenHeight = p_scrrenH;
 	m_screenWidth = p_screenW;
-	m_rotateSpeed = p_deltaTime * 0.75f;
+	m_rotateSpeed = p_deltaTime * 1.0f;
 	//m_moveSpeed = p_deltaTime * 1.0f;
 	m_moveSpeed = p_deltaTime * 450.0f;
 
@@ -56,6 +58,13 @@ void Camera::Update(float p_deltaTime, HWND p_hwnd, int p_screenW, int p_scrrenH
 }
 void Camera::UpdateKeyboard()
 {
+	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('o')))
+	{
+		if (m_rotateUsingMouse)
+			m_rotateUsingMouse = false;
+		else
+			m_rotateUsingMouse = true;
+	}
 	//Strafe
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('a')))
 	{
@@ -86,26 +95,26 @@ void Camera::UpdateKeyboard()
 		Walk(-m_moveSpeed);
 	}
 
-
-	//Rotate camera
-	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('i')))
+	if (!m_rotateUsingMouse)
 	{
-		Pitch(-m_rotateSpeed);
-
+		//Rotate camera
+		if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('i')))
+		{
+			Pitch(-m_rotateSpeed);
+		}
+		if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('k')))
+		{
+			Pitch(m_rotateSpeed);
+		}
+		if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('l')))
+		{
+			RotateY(m_rotateSpeed);
+		}
+		if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('j')))
+		{
+			RotateY(-m_rotateSpeed);
+		}
 	}
-	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('k')))
-	{
-		Pitch(m_rotateSpeed);
-	}
-	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('l')))
-	{
-		RotateY(m_rotateSpeed);
-	}
-	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('j')))
-	{
-		RotateY(-m_rotateSpeed);
-	}
-
 
 
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan(VK_SPACE)))
@@ -160,51 +169,51 @@ void Camera::UpOrDown(float p_distance)
 }
 void Camera::Pitch(float p_angle)
 {
-	DirectX::XMMATRIX rotation;
-	rotation = DirectX::XMMatrixRotationX(p_angle);
-
-	//DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
-	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_look), rotation));
+	m_pitch += -p_angle;
+	RotateCamera();
 }
 void Camera::RotateY(float p_angle)
 {
-	DirectX::XMMATRIX rotation;
-	rotation = DirectX::XMMatrixRotationY(p_angle);
-
-	DirectX::XMStoreFloat4(&m_right, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_right), rotation));
-	//DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
-	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_look), rotation));
+	m_yaw += p_angle;
+	RotateCamera();
 }
 void Camera::UpdateMouse(HWND p_hwnd)
 {
-	POINT p;
-	if (GetCursorPos(&p))
+	if (m_rotateUsingMouse)
 	{
-		if (ScreenToClient(p_hwnd, &p))
+		POINT p;
+		if (GetCursorPos(&p))
 		{
-			POINT mousePos;
-			int dx, dy;
-			mousePos.x = p.x;
-			mousePos.y = p.y;
-			dx = p.x - m_screenWidth;
-			dy = p.y - m_screenHeight;
+			if (ScreenToClient(p_hwnd, &p))
+			{
+				POINT mousePos;
+				int dx, dy;
+				mousePos.x = p.x;
+				mousePos.y = p.y;
+				dx = p.x - m_screenWidth;
+				dy = p.y - m_screenHeight;
 
-			m_yaw += dx * MOUSE_SPEED;
-			m_pitch += -dy * MOUSE_SPEED;
+				m_yaw += dx * MOUSE_SPEED;
+				m_pitch += -dy * MOUSE_SPEED;
 
-			DirectX::XMMATRIX rotation;
-			rotation = DirectX::XMMatrixRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
+				RotateCamera();
 
-			DirectX::XMStoreFloat4(&m_right, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_rightDefault), rotation));
-			DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_lookDefault), rotation));
-
-			p.x = m_screenWidth;
-			p.y = m_screenHeight;
-			ClientToScreen(p_hwnd, &p);
-			SetCursorPos(p.x, p.y);
-			ShowCursor(FALSE);
+				p.x = m_screenWidth;
+				p.y = m_screenHeight;
+				ClientToScreen(p_hwnd, &p);
+				SetCursorPos(p.x, p.y);
+				ShowCursor(FALSE);
+			}
 		}
 	}
+}
+void Camera::RotateCamera()
+{
+	DirectX::XMMATRIX rotation;
+	rotation = DirectX::XMMatrixRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
+
+	DirectX::XMStoreFloat4(&m_right, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_rightDefault), rotation));
+	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_lookDefault), rotation));
 }
 void Camera::Shutdown()
 {
