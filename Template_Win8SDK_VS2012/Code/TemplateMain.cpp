@@ -413,7 +413,7 @@ void SetSampler()
 }
 HRESULT Update(float deltaTime)
 {
-	Camera::GetInstance()->Update(deltaTime);
+	Camera::GetInstance()->Update(deltaTime, g_hWnd, g_Width, g_Height);
 	UpdateEveryFrameBuffer();
 	UpdateSpheres(deltaTime);
 	UpdateLights(deltaTime);

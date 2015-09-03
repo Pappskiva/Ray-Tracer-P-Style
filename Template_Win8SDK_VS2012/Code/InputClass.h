@@ -56,6 +56,11 @@ public:
 	bool IsRightMousePressed() const;
 	bool IsRightMouseClicked() const;
 
+	int GetMousePosX() const;
+	int GetMousePosY() const;
+	int GetMousePrevPosX() const;
+	int GetMousePrevPosY() const;
+
 	void ClearInput();
 
 private:

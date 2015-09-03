@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "InputClass.h"
+#include <WinUser.h>
 Camera* Camera::m_instance;
 Camera::Camera(){}
 Camera::~Camera(){}
@@ -20,6 +21,11 @@ void Camera::Initialize()
 	m_right = DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	m_up = DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	m_look = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	m_upDefault = m_up;
+	m_rightDefault = m_right;
+	m_lookDefault = m_look;
+	m_yaw = DirectX::XM_PI;
+	m_pitch = DirectX::XM_PI;
 
 	DirectX::XMStoreFloat4x4(&m_projectionMatrix, DirectX::XMMatrixIdentity());
 	DirectX::XMStoreFloat4x4(&m_viewMatrix, DirectX::XMMatrixIdentity());
@@ -36,14 +42,16 @@ void Camera::Initialize()
 	InputClass::GetInstance()->RegisterKey(VkKeyScan(VK_SPACE));
 
 }
-void Camera::Update(float p_deltaTime)
+void Camera::Update(float p_deltaTime, HWND p_hwnd, int p_screenW, int p_scrrenH)
 {
+	m_screenHeight = p_scrrenH;
+	m_screenWidth = p_screenW;
 	m_rotateSpeed = p_deltaTime * 0.75f;
 	//m_moveSpeed = p_deltaTime * 1.0f;
 	m_moveSpeed = p_deltaTime * 450.0f;
 
 	m_instance->UpdateKeyboard();
-	m_instance->UpdateMouse();
+	m_instance->UpdateMouse(p_hwnd);
 	m_instance->UpdateViewMatrix();
 }
 void Camera::UpdateKeyboard()
@@ -51,11 +59,11 @@ void Camera::UpdateKeyboard()
 	//Strafe
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('a')))
 	{
-		Strafe(-m_moveSpeed);
+		Strafe(m_moveSpeed);
 	}
 	if (InputClass::GetInstance()->IsKeyPressed(VkKeyScan('d')))
 	{
-		Strafe(m_moveSpeed);
+		Strafe(-m_moveSpeed);
 	}
 
 	//Up and down
@@ -167,16 +175,36 @@ void Camera::RotateY(float p_angle)
 	//DirectX::XMStoreFloat4(&m_up, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_up), rotation));
 	DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_look), rotation));
 }
-void Camera::UpdateMouse()
+void Camera::UpdateMouse(HWND p_hwnd)
 {
-	//if (InputClass::GetInstance()->IsLeftMousePressed())
-	//{
-	//	m_look.z += m_moveSpeed;
-	//}
-	//if (InputClass::GetInstance()->IsRightMouseClicked())
-	//{
-	//	m_look.z -= m_moveSpeed;
-	//}
+	POINT p;
+	if (GetCursorPos(&p))
+	{
+		if (ScreenToClient(p_hwnd, &p))
+		{
+			POINT mousePos;
+			int dx, dy;
+			mousePos.x = p.x;
+			mousePos.y = p.y;
+			dx = p.x - m_screenWidth;
+			dy = p.y - m_screenHeight;
+
+			m_yaw += dx * MOUSE_SPEED;
+			m_pitch += -dy * MOUSE_SPEED;
+
+			DirectX::XMMATRIX rotation;
+			rotation = DirectX::XMMatrixRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
+
+			DirectX::XMStoreFloat4(&m_right, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_rightDefault), rotation));
+			DirectX::XMStoreFloat4(&m_look, DirectX::XMVector4Transform(DirectX::XMLoadFloat4(&m_lookDefault), rotation));
+
+			p.x = m_screenWidth;
+			p.y = m_screenHeight;
+			ClientToScreen(p_hwnd, &p);
+			SetCursorPos(p.x, p.y);
+			ShowCursor(FALSE);
+		}
+	}
 }
 void Camera::Shutdown()
 {

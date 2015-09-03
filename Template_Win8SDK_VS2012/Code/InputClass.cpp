@@ -19,6 +19,10 @@ void InputClass::Initialize()
 {
 	m_rightMouseButton = new ButtonEvent();
 	m_leftMouseButton = new ButtonEvent();
+	m_mousePositionX_prev = 0;
+	m_mousePositionY_prev = 0;
+	m_mousePositionX = 0;
+	m_mousePositionY = 0;
 }
 void InputClass::Update(UINT p_message, WPARAM p_wParam, LPARAM p_lParam)
 {
@@ -183,6 +187,22 @@ void InputClass::ClearInput()
 		}
 	}
 	m_lastCharRead = '\0';
+}
+int InputClass::GetMousePosX() const
+{
+	return m_mousePositionX;
+}
+int InputClass::GetMousePosY() const
+{
+	return m_mousePositionY;
+}
+int InputClass::GetMousePrevPosX() const
+{
+	return m_mousePositionX_prev;
+}
+int InputClass::GetMousePrevPosY() const
+{
+	return m_mousePositionY_prev;
 }
 
 

@@ -1,6 +1,9 @@
 #pragma once
 #include <DirectXMath.h>
 #include <vector>
+#include <Windows.h>
+
+#define MOUSE_SPEED 0.00087266f
 class Camera
 {
 public:
@@ -9,7 +12,7 @@ public:
 	static Camera* GetInstance();
 
 	void Initialize();
-	void Update(float p_deltaTime);
+	void Update(float p_deltaTime, HWND p_hwnd, int p_screenW, int p_scrrenH);
 	void Shutdown();
 	DirectX::XMFLOAT4 GetCameraPos();
 	DirectX::XMFLOAT4 GetLookAt();
@@ -33,7 +36,7 @@ private:
 
 	
 	void UpdateKeyboard();
-	void UpdateMouse();
+	void UpdateMouse(HWND p_hwnd);
 
 	DirectX::XMFLOAT4 m_cameraPosition;
 	DirectX::XMFLOAT4X4 m_projectionMatrix;
@@ -42,8 +45,16 @@ private:
 	DirectX::XMFLOAT4 m_up;
 	DirectX::XMFLOAT4 m_right;
 	DirectX::XMFLOAT4 m_look;
+	DirectX::XMFLOAT4 m_upDefault;
+	DirectX::XMFLOAT4 m_rightDefault;
+	DirectX::XMFLOAT4 m_lookDefault;
 
 	float m_moveSpeed;
 	float m_rotateSpeed;
+
+	float m_yaw;
+	float m_pitch;
+	int m_screenWidth;
+	int m_screenHeight;
 };
 
