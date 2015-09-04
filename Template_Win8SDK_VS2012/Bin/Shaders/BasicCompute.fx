@@ -68,7 +68,7 @@ cbuffer everyFrame		: register(b0)
 	int Padding2;
 	uint numberOfBounces;
 }
-cbuffer PrimitiveBuffer : register(b1)
+cbuffer SphereBuffer : register(b1)
 {
 	Sphere sphere[NUMBER_OF_SPHERES];
 }
@@ -143,7 +143,7 @@ float4 TraceRay(Ray p_ray)
 
 	nextRay = RayJump(nextRay, collideNormal, material, primitiveIndex, primitiveType);
 
-	if (primitiveType != PRIMITIVE_INDICATOR_NONE)
+	if (primitiveType != PRIMITIVE_INDICATOR_NONE)//If it hits something
 	{
 		returnColor = ShadeCalculation(nextRay, primitiveIndex, primitiveType, collideNormal, material);
 	}
@@ -154,7 +154,7 @@ float4 TraceRay(Ray p_ray)
 	for (uint i = 0; i < numberOfBounces - 1; i++)
 	{
 		isReflective = GetReflective(primitiveIndex, primitiveType);
-		if (isReflective == 1)
+		if (isReflective == 1)//If reflective
 		{
 			reflectiveFactor *= GetReflectiveFactor(primitiveIndex, primitiveType);
 			if (reflectiveFactor > -EPSILON && reflectiveFactor < EPSILON)
@@ -444,7 +444,7 @@ bool InLight(in Ray p_ray, in uint p_primitiveIndex, in uint p_primitiveType, in
 }
 float4 CalculateLight(Material p_material, float4 p_hitPosition, float4 p_surfaceNormal, PointLightStruct p_lightData)
 {
-	float4 L = p_lightData.position - p_hitPosition;
+	float4 L = p_lightData.position - p_hitPosition; //vector from the point on the surface to each light
 	float d = length(L);
 
 	float r = 5000.0f;
@@ -452,17 +452,21 @@ float4 CalculateLight(Material p_material, float4 p_hitPosition, float4 p_surfac
 	float b = 2.0f / r;
 	float c = 1.0f;
 
+	//d = distance between the light and the surface being shaded
+	//a = quadratic attenuation factor
+	//b = linear attenuation factor
+	//c = constant attenuation factor
 	float lightAttenuation = 1 / (a*d*d + b*d + c);
 	L = normalize(L);
 
 	float4 N = normalize(p_surfaceNormal);
-	float4 R = normalize(2 * saturate(dot(L, N)) * N - L);
-	float4 V = normalize(cameraPosition - p_hitPosition);
+	float4 R = normalize(2 * saturate(dot(L, N)) * N - L);//direction a reflected ray of light would take from this point on the surface
+	float4 V = normalize(cameraPosition - p_hitPosition);// direction pointing towards the viewer
 
 	return lightAttenuation * CalculatPhongLighting(p_material, L, N, R, V);
 }
 float4 CalculatPhongLighting(Material M, float4 L, float4 N, float4 R, float4 V)
-{
+{//soft specular calculations
 	float4 specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	float4 diffuse = saturate(dot(L, N));
 	if (diffuse.x > 0.0f)

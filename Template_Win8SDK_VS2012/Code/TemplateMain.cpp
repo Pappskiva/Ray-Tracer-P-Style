@@ -274,7 +274,7 @@ void Initialize()
 
 	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
 	{
-		m_lights[i].position = DirectX::XMFLOAT4(1900.0f- (i*200),0.0f,1900.0f,1.0f);
+		m_lights[i].position = DirectX::XMFLOAT4(1900.0f- (i*400),0.0f,1900.0f,1.0f);
 		m_lights[i].color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		m_ligthDir[i] = MoveXPos;
 	}
@@ -296,6 +296,7 @@ void Initialize()
 void LoadObjectData()
 {
 	LoadMesh("BigCrate.obj");
+	//LoadMesh("BigCrate.obj");
 
 }
 void LoadMesh(char* p_path)
@@ -468,13 +469,12 @@ void UpdateLights(float p_deltaTime)
 	}
 	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('c')))
 	{
-		if (m_numberOfLights > 0)
+		if (m_numberOfLightBounces > 1)
 			m_numberOfLightBounces--;
 	}
 	if (InputClass::GetInstance()->IsKeyClicked(VkKeyScan('v')))
 	{
-		if (m_numberOfLights < 10)
-			m_numberOfLightBounces++;
+		m_numberOfLightBounces++;
 	}
 	for (unsigned int i = 0; i < LIGHT_COUNT; i++)
 	{
@@ -627,7 +627,7 @@ HRESULT Render(float deltaTime)
 
 	g_Timer->Start();
 	g_ComputeShader->Set();
-	g_DeviceContext->Dispatch(25, 25, 1);
+	g_DeviceContext->Dispatch(32, 32, 1);
 	g_ComputeShader->Unset();
 
 	//for (unsigned int x = 0; x < 2; x++)
@@ -643,22 +643,24 @@ HRESULT Render(float deltaTime)
 	//}
 	g_Timer->Stop();
 
+
+
 	if(FAILED(g_SwapChain->Present( 0, 0 )))
 		return E_FAIL;
 
 	char title[256];
 	sprintf_s(
 		title,
-		sizeof(title),
-		/*BTH - DirectCompute DEMO - */"Camera Pos: X:%f Y:%f Z:%f Camera Dir: X:%f Y:%f Z:%f",
-		Camera::GetInstance()->GetCameraPos().x,
-		Camera::GetInstance()->GetCameraPos().y,
-		Camera::GetInstance()->GetCameraPos().z,
-		Camera::GetInstance()->GetLookAt().x,
-		(float)m_numberOfLightBounces,
-		(float)m_numberOfLights
-		//Camera::GetInstance()->GetLookAt().z
-	);
+		sizeof(title), "Dispatch time: %f Number of lights: %i Number of bounces: %i", g_Timer->GetTime(), m_numberOfLights, m_numberOfLightBounces);
+		///*BTH - DirectCompute DEMO - */"Camera Pos: X:%f Y:%f Z:%f Camera Dir: X:%f Y:%f Z:%f",
+		//Camera::GetInstance()->GetCameraPos().x,
+		//Camera::GetInstance()->GetCameraPos().y,
+		//Camera::GetInstance()->GetCameraPos().z,
+		//Camera::GetInstance()->GetLookAt().x,
+		//(float)m_numberOfLightBounces,
+		//(float)m_numberOfLights
+		////Camera::GetInstance()->GetLookAt().z
+	//);
 		//"BTH - DirectCompute raytracing - Dispatch time: %f ", g_Timer->GetTime());
 	SetWindowTextA(g_hWnd, title);
 
@@ -745,7 +747,7 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
 
 	// Create window
 	g_hInst = hInstance; 
-	RECT rc = { 0, 0, 800, 800 };
+	RECT rc = { 0, 0, 1024, 1024 };
 	AdjustWindowRect( &rc, WS_OVERLAPPEDWINDOW, FALSE );
 	
 	if(!(g_hWnd = CreateWindow(
